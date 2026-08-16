@@ -55,6 +55,7 @@ struct ExpenseEditor: View {
                         .multilineTextAlignment(.center)
                         .focused($amountFocused)
                         .accessibilityLabel("Amount")
+                        .accessibilityIdentifier("amountField")
                 } header: {
                     Text("Amount")
                 } footer: {
@@ -64,6 +65,7 @@ struct ExpenseEditor: View {
                 Section {
                     TextField("Description", text: $detail)
                         .textInputAutocapitalization(.sentences)
+                        .accessibilityIdentifier("descriptionField")
 
                     DatePicker("Date", selection: $localDate, displayedComponents: .date)
 
@@ -109,6 +111,7 @@ struct ExpenseEditor: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save).disabled(!canSave)
+                        .accessibilityIdentifier("saveExpense")
                 }
             }
             .alert("New category", isPresented: $addingCategory) {

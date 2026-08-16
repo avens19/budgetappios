@@ -46,7 +46,7 @@ struct CategoriesView: View {
     }
 
     private var expensesInPeriod: [LocalExpense] {
-        allExpenses.filter { $0.date >= range.start && $0.date < range.end }
+        allExpenses.filter { $0.state != .deleted && $0.date >= range.start && $0.date < range.end }
     }
 
     private var slices: [CategorySlice] {
@@ -152,9 +152,8 @@ struct CategoriesView: View {
         .refreshable { await session.syncAndWait() }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                if !isCurrentPeriod {
-                    Button("Today") { anchor = BudgetCalendar.today() }
-                }
+                Button("Today") { anchor = BudgetCalendar.today() }
+                    .disabled(isCurrentPeriod)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Manage") { managing = true }

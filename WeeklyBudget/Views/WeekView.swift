@@ -9,11 +9,31 @@ struct WeekView: View {
     let budget: LocalBudget
 
     @State private var anchor = BudgetCalendar.today()
-    @State private var editing: LocalExpense?
-    @State private var addingExpense = false
-    @State private var showingDatePicker = false
     @State private var confirmingCarry = false
-    @State private var showingSettings = false
+
+    /// One sheet, not four.
+    ///
+    /// Stacking several `.sheet` modifiers on the same view does not reliably
+    /// work: with four of them here, tapping a row set the state but nothing
+    /// was ever presented, so expenses could not be opened for editing at all.
+    /// A single modifier driven by an enum is the supported shape.
+    @State private var sheet: Sheet?
+
+    private enum Sheet: Identifiable {
+        case add
+        case edit(LocalExpense)
+        case settings
+        case datePicker
+
+        var id: String {
+            switch self {
+            case .add: "add"
+            case .edit(let expense): "edit-\(expense.id)"
+            case .settings: "settings"
+            case .datePicker: "datePicker"
+            }
+        }
+    }
 
     @Query private var allExpenses: [LocalExpense]
     @Query private var allCategories: [LocalCategory]
@@ -31,7 +51,9 @@ struct WeekView: View {
     private var weekEnd: Date { calendar.weekEnd(containing: anchor) }
 
     private var expenses: [LocalExpense] {
-        allExpenses.filter { $0.date >= weekStart && $0.date < weekEnd }
+        // `.deleted` is a row awaiting a DELETE on the server, not a row the
+        // user should still be looking at.
+        allExpenses.filter { $0.state != .deleted && $0.date >= weekStart && $0.date < weekEnd }
     }
 
     private var palette: CategoryPalette {
@@ -71,7 +93,7 @@ struct WeekView: View {
                     subtitle: subtitle,
                     onBack: { step(-1) },
                     onForward: { step(1) },
-                    onTapLabel: { showingDatePicker = true })
+                    onTapLabel: { sheet = .datePicker })
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
@@ -95,7 +117,7 @@ struct WeekView: View {
             ForEach(days, id: \.date) { day in
                 Section {
                     ForEach(day.rows) { expense in
-                        Button { editing = expense } label: {
+                        Button { sheet = .edit(expense) } label: {
                             ExpenseRow(expense: expense, palette: palette)
                         }
                         .buttonStyle(.plain)
@@ -136,33 +158,34 @@ struct WeekView: View {
         .refreshable { await session.syncAndWait() }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                if !isCurrentWeek {
-                    Button("Today") { anchor = BudgetCalendar.today() }
-                }
+                Button("Today") { anchor = BudgetCalendar.today() }
+                    .disabled(isCurrentWeek)
             }
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button { showingSettings = true } label: {
+                Button { sheet = .settings } label: {
                     Image(systemName: "gearshape")
                 }
                 .accessibilityLabel("Budget settings")
+                .accessibilityIdentifier("budgetSettings")
 
-                Button { addingExpense = true } label: {
+                Button { sheet = .add } label: {
                     Image(systemName: "plus")
                 }
                 .accessibilityLabel("Add expense")
+                .accessibilityIdentifier("addExpense")
             }
         }
-        .sheet(isPresented: $addingExpense) {
-            ExpenseEditor(budget: budget, expense: nil, defaultDate: defaultDateForNewExpense)
-        }
-        .sheet(item: $editing) { expense in
-            ExpenseEditor(budget: budget, expense: expense, defaultDate: expense.date)
-        }
-        .sheet(isPresented: $showingSettings) {
-            NavigationStack { BudgetSettingsView(budget: budget) }
-        }
-        .sheet(isPresented: $showingDatePicker) {
-            PeriodPickerSheet(title: "Jump to a week", selection: $anchor)
+        .sheet(item: $sheet) { which in
+            switch which {
+            case .add:
+                ExpenseEditor(budget: budget, expense: nil, defaultDate: defaultDateForNewExpense)
+            case .edit(let expense):
+                ExpenseEditor(budget: budget, expense: expense, defaultDate: expense.date)
+            case .settings:
+                NavigationStack { BudgetSettingsView(budget: budget) }
+            case .datePicker:
+                PeriodPickerSheet(title: "Jump to a week", selection: $anchor)
+            }
         }
         .confirmationDialog("Carry balance", isPresented: $confirmingCarry, titleVisibility: .visible) {
             Button("Move \(Money.string(remaining)) to next week") {

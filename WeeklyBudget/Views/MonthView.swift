@@ -34,7 +34,7 @@ struct MonthView: View {
         calendar.weeks(inMonthContaining: anchor).map { start in
             let end = calendar.addingWeeks(1, to: start)
             let total = allExpenses
-                .filter { $0.date >= start && $0.date < end }
+                .filter { $0.state != .deleted && $0.date >= start && $0.date < end }
                 .reduce(0) { $0 + $1.amount }
             return WeekSummary(start: start, total: total)
         }
@@ -45,7 +45,7 @@ struct MonthView: View {
     /// previous month.
     private var monthTotal: Double {
         allExpenses
-            .filter { calendar.isInMonth($0.date, monthContaining: anchor) }
+            .filter { $0.state != .deleted && calendar.isInMonth($0.date, monthContaining: anchor) }
             .reduce(0) { $0 + $1.amount }
     }
 
@@ -108,9 +108,8 @@ struct MonthView: View {
         .refreshable { await session.syncAndWait() }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                if !isCurrentMonth {
-                    Button("Today") { anchor = BudgetCalendar.today() }
-                }
+                Button("Today") { anchor = BudgetCalendar.today() }
+                    .disabled(isCurrentMonth)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showingSettings = true } label: { Image(systemName: "gearshape") }

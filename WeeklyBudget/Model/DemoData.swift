@@ -58,6 +58,13 @@ enum DemoData {
         try? context.save()
     }
 
+    /// Seeds and selects, for the in-memory store the UI tests run against.
+    static func seedIfRequested(into context: ModelContext) {
+        guard isRequested else { return }
+        seed(into: context)
+        UserDefaults.standard.set(budgetId, forKey: "budget.currentId")
+    }
+
     static func seed(into context: ModelContext) {
         let id = budgetId
         let already = try? context.fetch(FetchDescriptor<LocalBudget>(

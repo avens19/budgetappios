@@ -10,6 +10,18 @@ struct WeeklyBudgetApp: App {
 
     init() {
         do {
+            #if DEBUG
+            // UI tests each want the same starting state, and one test's new
+            // expense must not change the totals the next one asserts on.
+            if CommandLine.arguments.contains("-resetStore") {
+                container = try ModelContainer(
+                    for: LocalBudget.self, LocalExpense.self, LocalCategory.self,
+                    configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                DemoData.seedIfRequested(into: container.mainContext)
+                _session = State(initialValue: BudgetSession(container: container))
+                return
+            }
+            #endif
             container = try ModelContainer(
                 for: LocalBudget.self, LocalExpense.self, LocalCategory.self)
         } catch {

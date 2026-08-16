@@ -61,26 +61,40 @@ struct HeroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(isOver ? "Over budget" : "Left to spend")
-                .font(.subheadline.weight(.medium))
+            // The numbers read as one sentence, so VoiceOver says
+            // "$202.20 left to spend, $197.80 of $400.00" rather than four
+            // stray fragments. Combining is applied *here* and not to the whole
+            // card: doing it at the top level swallowed the Carry balance
+            // button into the same element, which both duplicated its
+            // identifier and left VoiceOver users no way to reach it.
+            VStack(alignment: .leading, spacing: 12) {
+                Text(isOver ? "Over budget" : "Left to spend")
+                    .font(.subheadline.weight(.medium))
 
-            Text(Money.string(abs(remaining)))
-                .font(.system(size: 44, weight: .semibold, design: .rounded))
-                .contentTransition(.numericText())
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
+                Text(Money.string(abs(remaining)))
+                    .font(.system(size: 44, weight: .semibold, design: .rounded))
+                    .contentTransition(.numericText())
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
 
-            ProgressView(value: fraction)
-                .tint(isOver ? Color(.systemRed) : .accentColor)
+                ProgressView(value: fraction)
+                    .tint(isOver ? Color(.systemRed) : .accentColor)
 
-            HStack {
                 Text("\(Money.string(spent)) of \(Money.string(limit))")
                     .font(.footnote)
-                Spacer()
-                if let onCarry {
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(isOver
+                ? "Over budget by \(Money.string(abs(remaining))), \(Money.string(spent)) of \(Money.string(limit))"
+                : "\(Money.string(abs(remaining))) left to spend, \(Money.string(spent)) of \(Money.string(limit))")
+
+            if let onCarry {
+                HStack {
+                    Spacer()
                     Button("Carry balance", action: onCarry)
+                        .accessibilityIdentifier("carryBalance")
                         .font(.footnote.weight(.medium))
-                        .buttonStyle(.plain)
+                        .buttonStyle(.borderless)
                         .foregroundStyle(.tint)
                 }
             }
@@ -90,10 +104,6 @@ struct HeroCard: View {
         .background(isOver ? Color(.systemRed).opacity(0.12) : Color.accentColor.opacity(0.12),
                     in: RoundedRectangle(cornerRadius: 20))
         .foregroundStyle(isOver ? Color(.systemRed) : Color.accentColor)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(isOver
-            ? "Over budget by \(Money.string(abs(remaining)))"
-            : "\(Money.string(abs(remaining))) left to spend, \(Money.string(spent)) of \(Money.string(limit))")
     }
 }
 
@@ -113,6 +123,7 @@ struct PeriodStepper: View {
             Button(action: onBack) {
                 Image(systemName: "chevron.left")
             }
+            .buttonStyle(.borderless)
             .accessibilityLabel("Previous")
 
             Spacer()
@@ -125,7 +136,7 @@ struct PeriodStepper: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.borderless)
             .accessibilityHint("Jump to a date")
 
             Spacer()
@@ -133,6 +144,7 @@ struct PeriodStepper: View {
             Button(action: onForward) {
                 Image(systemName: "chevron.right")
             }
+            .buttonStyle(.borderless)
             .accessibilityLabel("Next")
         }
         .padding(.horizontal, 4)
@@ -165,6 +177,11 @@ struct ExpenseRow: View {
                 .monospacedDigit()
                 .foregroundStyle(expense.amount < 0 ? Color.accentColor : .primary)
         }
+        // Without this the row is only tappable where there are actually
+        // glyphs. The HStack has a Spacer through the middle, so a tap in the
+        // gap between the description and the amount — which is most of the
+        // row, and where a thumb naturally lands — hit nothing at all.
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 }
