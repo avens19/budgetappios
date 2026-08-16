@@ -19,7 +19,6 @@ enum SyncState: String, Codable, Sendable {
 
 @Model
 final class LocalBudget {
-    #Index<LocalBudget>([\.uniqueId])
     @Attribute(.unique) var uniqueId: String
     var name: String
     var startDay: Int
@@ -52,7 +51,6 @@ final class LocalBudget {
 
 @Model
 final class LocalExpense {
-    #Index<LocalExpense>([\.budgetId], [\.date])
     @Attribute(.unique) var id: Int64
     var date: Date
 
@@ -109,7 +107,6 @@ final class LocalExpense {
 
 @Model
 final class LocalCategory {
-    #Index<LocalCategory>([\.budgetId])
     @Attribute(.unique) var id: Int64
     var name: String
     var budgetId: String

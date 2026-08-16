@@ -28,8 +28,14 @@ extension Date {
     /// Formatted in UTC on purpose: a budget day is a calendar day, and
     /// rendering it in the device's zone would show the 13th for a row that
     /// means the 14th.
+    ///
+    /// `FormatStyle.timeZone(_:)` selects how a zone is *displayed*, which is
+    /// not what is wanted — the zone the value is interpreted in is set on the
+    /// style itself.
     func budgetFormatted(_ format: Date.FormatStyle) -> String {
-        format.timeZone(TimeZone(identifier: "UTC")!).format(self)
+        var utc = format
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        return utc.format(self)
     }
 
     var dayHeading: String {
