@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "timezone": "America/Edmonton",
+  "schedule": ["before 6am on the first day of the month"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "There are deliberately no third-party packages in this app, so this config exists to keep GitHub Actions current and to notice if a dependency ever creeps in.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ]
+}
