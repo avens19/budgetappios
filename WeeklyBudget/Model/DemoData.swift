@@ -48,6 +48,19 @@ enum DemoData {
         return (String(parts[0]), amount)
     }
 
+    /// `-addWithNewCategory "Category:Description:12.34"` creates both at once,
+    /// the way a user does when they tag an expense with a category that does
+    /// not exist yet. This is the shape that broke sync in production: the
+    /// expense is created against a local category id, and both have to reach
+    /// the server with the link intact.
+    static var pairToAdd: (String, String, Double)? {
+        guard let index = CommandLine.arguments.firstIndex(of: "-addWithNewCategory"),
+              index + 1 < CommandLine.arguments.count else { return nil }
+        let parts = CommandLine.arguments[index + 1].split(separator: ":")
+        guard parts.count == 3, let amount = Double(parts[2]) else { return nil }
+        return (String(parts[0]), String(parts[1]), amount)
+    }
+
     /// Inserts only the budget row. Everything else arrives through the change
     /// feed on the first sync, which is the point of the exercise.
     static func attach(to id: String, in context: ModelContext) {

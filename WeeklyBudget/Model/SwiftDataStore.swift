@@ -133,6 +133,21 @@ actor SwiftDataStore: LocalStore {
         modelContext.insert(LocalCategory(id: saved.id, name: saved.name,
                                           budgetId: saved.budgetId,
                                           isDeleted: saved.isDeleted, state: .synced))
+
+        // Expenses created against the local id have to follow it to the real
+        // one. Without this they keep pointing at a category that no longer
+        // exists here: the expense reads as "Uncategorized" on this device until
+        // some later sync happens to overwrite it, and any edit pushes the dead
+        // id back to the server. That is the bug that took down a client's whole
+        // sync in production — the same shape, on the other side of the wire.
+        let budgetId = saved.budgetId
+        let affected = try modelContext.fetch(FetchDescriptor<LocalExpense>(
+            predicate: #Predicate { $0.budgetId == budgetId }))
+            .filter { $0.categoryId == localId }
+        for expense in affected {
+            expense.categoryId = saved.id
+        }
+
         try modelContext.save()
     }
 

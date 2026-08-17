@@ -85,6 +85,11 @@ struct RootView: View {
                 session.addExpense(to: budget, date: BudgetCalendar.today(),
                                    detail: detail, amount: amount, categoryId: nil)
             }
+            if let (category, detail, amount) = DemoData.pairToAdd, let budget = current {
+                let created = session.addCategory(named: category, to: budget)
+                session.addExpense(to: budget, date: BudgetCalendar.today(),
+                                   detail: detail, amount: amount, categoryId: created.id)
+            }
             #endif
             session.sync()
         }
