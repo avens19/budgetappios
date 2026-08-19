@@ -1,7 +1,8 @@
 # App Store listing
 
-Copy for App Store Connect. Kept here so it is version-controlled and matches
-what the app actually does, rather than living only in a web form.
+Everything App Store Connect asks for, kept here so it is version-controlled and
+can be diffed against what the app actually does — rather than existing only in a
+web form nobody can review.
 
 Screenshots are in `../Screenshots/`, at both sizes Connect asks for:
 
@@ -10,101 +11,153 @@ Screenshots are in `../Screenshots/`, at both sizes Connect asks for:
 
 Which slots a listing shows varies, and Connect rejects anything that is not one
 of its exact sizes rather than scaling it — so both are captured natively from a
-simulator of the right model. Rescaling the 6.9" set would have meant either
-padding or cropping, since the two aspect ratios are not identical.
+simulator of the right model.
 
-## Name
+---
+
+## Name (30 max)
 
 Weekly Spend
 
-"Weekly Budget" is taken on the App Store, where names are globally unique —
-unlike Google Play, where the Android app keeps that name. "Weekly Spend" holds
-onto the words someone looking for this would actually search for.
+"Weekly Budget" is taken; App Store names are globally unique, unlike Google
+Play, where the Android app keeps that name. The home-screen name is separate and
+stays "Weekly Budget" (`INFOPLIST_KEY_CFBundleDisplayName`), so on a phone with
+both apps the icons match.
 
-The home-screen name is separate and stays "Weekly Budget"
-(INFOPLIST_KEY_CFBundleDisplayName), so the icon matches the Android app on a
-phone that has both.
+## Subtitle (30 max)
 
-## Subtitle (30 characters max)
+Budget by the week, together
 
-What's left to spend this week
+Deliberately does not repeat "weekly" or "spend". Apple indexes the name,
+subtitle and keywords as one pool, so a word spent twice is a word wasted — this
+adds "budget" and "together" instead.
 
 ## Promotional text (170 max)
 
-One number, updated as you spend: what is left this week. Share a budget with a
-partner and it stays in step across iPhone, Android and the web.
+One number, kept honest: what is left to spend this week. Share a budget with a
+partner and it stays in step across iPhone, Android and the web — no account
+needed.
 
-## Description
+Promotional text can be changed any time without submitting a new build, so it is
+the right place for anything seasonal or temporary.
+
+## Description (4000 max)
 
 Weekly Spend answers one question: how much is left to spend this week?
 
 Work out what you have after the bills that never change — rent, insurance,
 subscriptions — split it across the weeks in the month, and that is your weekly
-target. Add expenses as you go and watch the number come down.
+target. Add expenses as you go and watch the number come down. That is the whole
+idea.
 
-That is deliberately all it does. There is nowhere to enter recurring income or
-fixed expenses, because those amounts are already decided; leaving them out keeps
-the app on the one number that actually moves. If money arrives mid-week — a
-refund, a gift, cash back — add it as an expense with a minus sign.
+WHAT IT DELIBERATELY DOES NOT DO
+
+There is nowhere to enter your salary, your rent, or any other recurring amount.
+Those numbers are already decided, and putting them in an app does not change
+them. Leaving them out is what keeps this on the one figure that actually moves
+day to day. If money arrives mid-week — a refund, a gift, cash back — add it as
+an expense with a minus sign.
+
+No budgets to rebalance every month. No charts to interpret. No lectures.
 
 SHARED, PROPERLY
+
 One budget can live on as many devices as you like. Copy the budget ID, enter it
-on your partner's phone, and you both see the same running total within seconds.
-The same budget opens in the Android app and at budget.andrewovens.com, so a
-household with a mix of phones is not a problem.
+on your partner's phone, and you both see the same running total within seconds —
+add a coffee on the way home and it is there before you are.
+
+The same budget opens in the Weekly Budget Android app and at
+budget.andrewovens.com, so a household running a mix of phones is not a problem,
+and neither is checking it from a laptop.
 
 WORKS WITHOUT A SIGNAL
-Everything is stored on the device and syncs when it can. Add an expense in a
-basement car park and it is there; it reaches the other devices when you surface.
+
+Everything lives on the device and syncs when it can. Add an expense in a
+basement car park and it is saved; it reaches the other devices when you surface.
+Nothing is lost waiting for a connection.
 
 WHAT YOU GET
+
 • One clear number: what is left this week
-• Expenses grouped by day, with a running daily total
-• Categories, with a breakdown by week or month
-• A month view showing each week against your target
-• Carry an unspent balance into next week
-• No account, no email address, no password
+• Expenses grouped by day, with a running total for each
+• Categories, and a breakdown by week or month
+• A month view showing every week against your target
+• Carry an unspent balance forward into next week
+• Copy a repeating expense to next week in one tap
 
-NO ACCOUNTS, NO ADVERTISING
-There is nothing to sign up for. No advertising, no trackers, no third-party
-services, and nothing about you is collected — there is no name or email address
-to collect. A budget is identified by a random ID that only you have.
+NO ACCOUNTS, NO ADVERTISING, NO TRACKING
 
-## Keywords (100 characters max, comma separated)
+There is nothing to sign up for and no password to forget. No advertising, no
+analytics SDKs, no third-party services of any kind. There is no name, email
+address or phone number collected, because there is nowhere to enter one — a
+budget is identified by a random ID that only you and the people you share it
+with have.
 
-budget,weekly,spending,expenses,money,allowance,shared,couples,cash,simple
+Built and run by one person, not a company with an exit strategy.
 
-## Support URL
+## Keywords (100 max, comma separated, no spaces)
 
-https://budget.andrewovens.com
+allowance,expenses,tracker,money,cash,couples,partner,shared,envelope,simple,pocket,paycheck
 
-## Marketing URL
+Chosen to add terms the name and subtitle do not already cover. "weekly",
+"spend", "budget" and "together" are omitted on purpose — they are indexed from
+the name and subtitle, and repeating them here would waste the allowance.
 
-https://budget.andrewovens.com
+## What's New (4000 max)
 
-## Privacy policy URL
+First release.
 
-https://budget.andrewovens.com/privacy
+Weekly Spend has been the Android app Weekly Budget for years; this is the same
+budget, same server, on iPhone. If you already use it elsewhere, enter your
+budget ID in Settings and everything appears.
+
+## Categories
+
+Primary: Finance
+Secondary: Utilities
+
+Finance is where anyone looking for this would search. Utilities rather than
+Productivity for the secondary: the app is a single-purpose tool, not a system for
+organising your life.
+
+## URLs
+
+Support URL:        https://budget.andrewovens.com
+Marketing URL:      https://budget.andrewovens.com
+Privacy policy URL: https://budget.andrewovens.com/privacy
+
+## Copyright
+
+2026 Andrew Ovens
 
 ## Age rating
 
-4+ — no objectionable content, no user-generated content shown to others, no web
-browsing, no advertising.
+4+ — no objectionable content, no user-generated content shown to other people,
+no web browsing, no advertising, no gambling.
 
 ## App Privacy answers
 
-Data Not Linked to You → Other User Content, used for App Functionality only.
-That covers the expense descriptions and amounts. Not used for tracking. There is
-no identifier to link anything to, which is why this section is short.
+Data Not Linked to You → Other User Content → App Functionality only. That covers
+the expense descriptions and amounts. Not used for tracking.
 
-Everything else: No.
+Everything else: No. There is no identifier to link anything to, which is why
+this section is unusually short for a finance app.
+
+Note the server keeps aggregate daily request counts, which is described in the
+privacy policy. It is not per-person and carries no identifier, so it is not
+declarable data collection under Apple's definitions — but the policy states it
+plainly rather than relying on that.
 
 ## Review notes
 
-No account is needed. Launching the app offers "Create" or "Join"; choosing
-Create makes a working budget immediately, so there are no credentials to supply.
+No account or login is required, so there are no test credentials to provide.
+Launching the app offers "Create" or "Join"; choosing Create makes a working
+budget immediately.
 
-The app talks to budget.andrewovens.com, which the developer also runs. A budget
-is addressed by a random ID generated on the device; anyone holding that ID can
-read and change that budget, which is how sharing between devices works and is
-stated plainly in the privacy policy.
+The app talks to budget.andrewovens.com, a server the developer also runs. A
+budget is addressed by a random ID generated on the device. Anyone holding that ID
+can read and change that budget — this is intentional, it is how sharing between
+devices works, and it is stated plainly in the privacy policy.
+
+Income is entered as an expense with a negative amount. This is deliberate and
+explained in the app's own "How this works" screen, reachable from Settings.
