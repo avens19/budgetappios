@@ -15,6 +15,9 @@ struct BudgetSettingsView: View {
     @State private var startDay = 0
     @State private var copied = false
     @State private var confirmingForget = false
+    @State private var invite: WireInvite?
+    @State private var invitingBusy = false
+    @State private var inviteError: String?
 
     @Query(sort: [SortDescriptor(\LocalBudget.lastOpened, order: .reverse)])
     private var budgets: [LocalBudget]
@@ -43,6 +46,44 @@ struct BudgetSettingsView: View {
                 Picker("Week starts on", selection: $startDay) {
                     ForEach(0..<7, id: \.self) { Text(Self.weekdays[$0]).tag($0) }
                 }
+            }
+
+            // The way to hand this budget to someone. Above the raw id because it
+            // is strictly better: it expires, it works once, and it can be taken
+            // back — none of which is true of the id.
+            Section {
+                if let invite {
+                    ShareLink(item: invite.url) {
+                        Label("Share invite link", systemImage: "square.and.arrow.up")
+                    }
+                    Button(role: .destructive) { cancelInvite(invite) } label: {
+                        Label("Cancel this invitation", systemImage: "xmark.circle")
+                    }
+                    .disabled(invitingBusy)
+                } else {
+                    Button {
+                        makeInvite()
+                    } label: {
+                        HStack {
+                            Label("Create an invitation", systemImage: "person.badge.plus")
+                            if invitingBusy {
+                                Spacer()
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(invitingBusy)
+                }
+
+                if let inviteError {
+                    Text(inviteError).font(.footnote).foregroundStyle(Color(.systemRed))
+                }
+            } header: {
+                Text("Invite someone")
+            } footer: {
+                Text(invite == nil
+                     ? "A link that works once and expires after seven days. Send it however you like; whoever opens it joins this budget."
+                     : "Good for one use, for the next seven days. Cancel it if you send it to the wrong person.")
             }
 
             Section {
@@ -74,7 +115,10 @@ struct BudgetSettingsView: View {
                     Label("Share budget ID", systemImage: "square.and.arrow.up")
                 }
             } footer: {
-                Text("Enter this ID on another device — another phone, or the web app — to use the same budget.")
+                // Kept, and demoted rather than removed: an invitation is the
+                // better route, but the ID is the only one older versions of the
+                // app in the field understand.
+                Text("The older way. Enter this ID on another device — another phone, or the web app — to use the same budget. It does not expire, so treat it like a password.")
             }
 
             if budgets.count > 1 {
@@ -143,6 +187,33 @@ struct BudgetSettingsView: View {
             name = budget.name
             amount = String(format: "%g", budget.amount)
             startDay = budget.startDay
+        }
+    }
+
+    private func makeInvite() {
+        invitingBusy = true
+        inviteError = nil
+        Task {
+            defer { invitingBusy = false }
+            do {
+                invite = try await session.createInvite(for: budget)
+            } catch {
+                inviteError = "Could not create an invitation. Check your connection and try again."
+            }
+        }
+    }
+
+    private func cancelInvite(_ existing: WireInvite) {
+        invitingBusy = true
+        inviteError = nil
+        Task {
+            defer { invitingBusy = false }
+            do {
+                try await session.revokeInvite(token: existing.token)
+                invite = nil
+            } catch {
+                inviteError = "Could not cancel that invitation."
+            }
         }
     }
 

@@ -323,6 +323,12 @@ final class InteractionTests: XCTestCase {
         // and a test that walks out of the app under test cannot assert much.
         XCTAssertTrue(app.buttons["Apps for other devices"].exists,
                       "the link to the other clients should be reachable")
+
+        // Also not tapped, for a different reason: creating an invitation is a
+        // real write against the real server, and a UI test should not be
+        // minting live invites on someone's budget.
+        XCTAssertTrue(app.buttons["Create an invitation"].exists,
+                      "inviting should be offered above the raw ID")
     }
 }
 

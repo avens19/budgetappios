@@ -30,7 +30,8 @@ struct OnboardingView: View {
         Page(symbol: "person.2.fill",
              title: "Share it with your partner",
              body: ["One budget can live on as many devices as you like, and they all stay in step.",
-                    "Open Settings, copy the budget ID, and enter it on the other device. You will both see the same running total."]),
+                    "Open Settings, create an invitation, and send the link. Whoever opens it joins this budget, and you will both see the same running total.",
+                    "The link works once and expires after a week, so a forwarded one is harmless."]),
         Page(symbol: "iphone.and.arrow.forward",
              title: "It works with the others",
              body: ["The same budget opens on other phones and at budget.andrewovens.com, with the same expenses and the same total.",
@@ -212,7 +213,7 @@ struct HowItWorksView: View {
         Item(symbol: "doc.text.fill", title: "Bills don't belong in here",
              body: "There is deliberately nowhere to enter recurring income or expenses. Those amounts are already fixed, so leaving them out keeps the app focused on the one number that actually moves: what you spent this week.\n\nIf money comes in mid-week — a refund, a gift, cash back — add it as an expense with a minus sign."),
         Item(symbol: "person.2.fill", title: "Share it with your partner",
-             body: "One budget can live on as many devices as you like, and they all stay in step. Copy the budget ID from Settings and enter it on the other device."),
+             body: "One budget can live on as many devices as you like, and they all stay in step. Open Settings, create an invitation, and send the link — whoever opens it joins this budget.\n\nThe link works once and expires after a week, so a forwarded one is harmless."),
         Item(symbol: "iphone.and.arrow.forward", title: "It works with the others",
              body: "The same budget opens on other phones and at budget.andrewovens.com, with the same expenses and the same total."),
     ]

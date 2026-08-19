@@ -49,5 +49,12 @@ test("breakdownDropsNegativeBuckets", CategoryPaletteTests.test_breakdownDropsNe
 test("orphansJoinUncategorized", CategoryPaletteTests.test_orphansJoinUncategorized)
 test("breakdownIsSortedDescending", CategoryPaletteTests.test_breakdownIsSortedDescending)
 
+print("  invite links")
+test("readsTheToken", InviteLinkTests.test_readsTheToken)
+test("acceptsBase64urlAlphabet", InviteLinkTests.test_acceptsBase64urlAlphabet)
+test("rejectsEverythingElse", InviteLinkTests.test_rejectsEverythingElse)
+test("rejectsPathTricks", InviteLinkTests.test_rejectsPathTricks)
+test("ignoresQueryAndFragment", InviteLinkTests.test_ignoresQueryAndFragment)
+
 print()
 exit(report())

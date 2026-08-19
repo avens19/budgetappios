@@ -66,6 +66,17 @@ struct RootView: View {
     /// around them. A query participates in the observation graph and re-reads.
     @Query private var budgets: [LocalBudget]
 
+    /// What an invite link is doing, so the user is not left looking at a screen
+    /// that has silently changed underneath them.
+    @State private var inviteOutcome: InviteOutcome?
+    @State private var redeeming = false
+
+    private struct InviteOutcome: Identifiable {
+        let id = UUID()
+        let title: String
+        let message: String
+    }
+
     private var current: LocalBudget? {
         guard let id = session.currentBudgetId else { return nil }
         return budgets.first { $0.uniqueId == id }
@@ -97,6 +108,63 @@ struct RootView: View {
             // Coming back to the app is exactly when another device's changes
             // are most likely to be waiting.
             if phase == .active { session.sync() }
+        }
+        // An invite link, arriving because the associated domain claims
+        // /join/*. Redeeming here rather than on the server's page is the whole
+        // point of the entitlement: the person never sees a browser.
+        .onOpenURL { url in accept(url) }
+        .overlay {
+            if redeeming {
+                // A modal wait, because the next thing that happens is the whole
+                // screen changing to a different budget.
+                ZStack {
+                    Color.black.opacity(0.2).ignoresSafeArea()
+                    ProgressView("Joining…")
+                        .padding(24)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                }
+            }
+        }
+        .alert(item: $inviteOutcome) { outcome in
+            Alert(title: Text(outcome.title), message: Text(outcome.message),
+                  dismissButton: .default(Text("OK")))
+        }
+    }
+
+    private func accept(_ url: URL) {
+        guard let token = inviteToken(in: url) else { return }
+        redeeming = true
+        Task {
+            defer { redeeming = false }
+            do {
+                let budget = try await session.acceptInvite(token: token)
+                inviteOutcome = InviteOutcome(
+                    title: "Budget joined",
+                    message: "You are now sharing \(budget.name.isEmpty ? "this budget" : budget.name). "
+                           + "It will fill in as it syncs.")
+            } catch let error as BudgetSession.InviteError {
+                inviteOutcome = InviteOutcome(title: "Invitation not valid",
+                                              message: error.errorDescription ?? "")
+            } catch {
+                inviteOutcome = InviteOutcome(
+                    title: "Could not join",
+                    message: "Check your connection and open the link again.")
+            }
+        }
+    }
+}
+
+/// `alert(item:)`, which SwiftUI never shipped.
+///
+/// The same trick as `sheet(item:)` — an Identifiable optional drives both the
+/// presentation and the content, so there is no way to be showing an alert with
+/// nothing to say in it.
+private extension View {
+    func alert<Item: Identifiable>(item: Binding<Item?>,
+                                   content: @escaping (Item) -> Alert) -> some View {
+        alert(isPresented: Binding(get: { item.wrappedValue != nil },
+                                   set: { if !$0 { item.wrappedValue = nil } })) {
+            content(item.wrappedValue!)
         }
     }
 }

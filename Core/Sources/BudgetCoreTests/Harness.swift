@@ -36,6 +36,16 @@ func XCTAssertEqual<T: Equatable>(_ a: @autoclosure () throws -> T, _ b: @autocl
     }
 }
 
+func XCTAssertNil<T>(_ expression: @autoclosure () throws -> T?,
+                     _ message: String = "",
+                     file: StaticString = #filePath, line: UInt = #line) rethrows {
+    Check.checks += 1
+    if let value = try expression() {
+        let detail = message.isEmpty ? "" : " — \(message)"
+        Check.failures.append("\(Check.currentTest): expected nil, got \(value)\(detail) (\(shortFile(file)):\(line))")
+    }
+}
+
 func XCTAssertThrowsError<T>(_ expression: @autoclosure () throws -> T,
                              _ message: String = "",
                              file: StaticString = #filePath, line: UInt = #line) {

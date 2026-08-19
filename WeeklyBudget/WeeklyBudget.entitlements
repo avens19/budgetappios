@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	    Claims invite links so tapping one opens the app instead of Safari.
+
+	    `applinks:` only declares the domain; which paths are claimed is decided
+	    by the server, in /.well-known/apple-app-site-association, which lists
+	    /join/* and nothing else. Apple fetches that file through its CDN, so a
+	    change to it is not picked up instantly — and on a device the app has
+	    already been installed on, not until the app is reinstalled or the CDN
+	    entry expires.
+	-->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:budget.andrewovens.com</string>
+	</array>
+</dict>
+</plist>

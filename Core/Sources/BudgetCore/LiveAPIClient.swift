@@ -13,7 +13,7 @@ import Foundation
 /// - The change feeds carry `X-Watermark`. Header lookup is case-insensitive
 ///   here because proxies rewrite header case freely and a missed header
 ///   silently means "never advance the watermark".
-public struct LiveAPIClient: BudgetAPI {
+public struct LiveAPIClient: BudgetAPI, InviteAPI {
 
     public static let productionURL = URL(string: "https://budget.andrewovens.com")!
 
@@ -127,6 +127,32 @@ public struct LiveAPIClient: BudgetAPI {
         let (data, response) = try await send(request("api/categories/\(id)", method: "DELETE"))
         try check(response)
         return try decoder.decode(WireCategory.self, from: data)
+    }
+
+    // MARK: Invites
+
+    public func createInvite(budgetId: String) async throws -> WireInvite {
+        let (data, response) = try await send(
+            request("api/budget/\(escaped(budgetId))/invites", method: "POST"))
+        try check(response)
+        return try decoder.decode(WireInvite.self, from: data)
+    }
+
+    public func revokeInvite(token: String) async throws {
+        let (_, response) = try await send(
+            request("api/invites/\(escaped(token))", method: "DELETE"))
+        try check(response)
+    }
+
+    /// 410 and 404 are answers, not failures: an invite that has been used,
+    /// cancelled or has expired is the normal end of one, and the caller has
+    /// something to say about it rather than an error to swallow.
+    public func redeemInvite(token: String) async throws -> WireBudget? {
+        let (data, response) = try await send(
+            request("api/invites/\(escaped(token))/redeem", method: "POST"))
+        if response.statusCode == 410 || response.statusCode == 404 { return nil }
+        try check(response)
+        return try decoder.decode(WireBudget.self, from: data)
     }
 
     // MARK: Plumbing

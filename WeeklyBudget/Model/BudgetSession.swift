@@ -18,12 +18,24 @@ final class BudgetSession {
 
     private let container: ModelContainer
     private let api: any BudgetAPI
+    private let invites: any InviteAPI
+
+    /// Tokens this launch has already acted on.
+    ///
+    /// `onOpenURL` is not guaranteed to fire once per link — a relaunch that
+    /// restores state can deliver the same URL again — and redeeming twice would
+    /// spend the invite and then tell the user their brand-new budget could not
+    /// be joined. Cheaper to remember than to reason about.
+    private var handledTokens: Set<String> = []
 
     private static let currentKey = "budget.currentId"
 
-    init(container: ModelContainer, api: any BudgetAPI = LiveAPIClient()) {
+    init(container: ModelContainer,
+         api: any BudgetAPI = LiveAPIClient(),
+         invites: any InviteAPI = LiveAPIClient()) {
         self.container = container
         self.api = api
+        self.invites = invites
         self.currentBudgetId = UserDefaults.standard.string(forKey: Self.currentKey)
     }
 
@@ -89,6 +101,60 @@ final class BudgetSession {
     enum JoinError: LocalizedError {
         case notFound
         var errorDescription: String? { "No budget with that ID. Check it and try again." }
+    }
+
+    // MARK: Invites
+
+    func createInvite(for budget: LocalBudget) async throws -> WireInvite {
+        try await invites.createInvite(budgetId: budget.uniqueId)
+    }
+
+    func revokeInvite(token: String) async throws {
+        try await invites.revokeInvite(token: token)
+    }
+
+    /// Redeems an invite link and switches to the budget it stood for.
+    ///
+    /// There is no way to check first whether this device already has that
+    /// budget: the token deliberately does not say which budget it points at
+    /// until it is redeemed. So redeeming may spend a use to learn something the
+    /// device already knew, which is the right trade — someone tapping a link
+    /// they were sent expects it to be used up.
+    @discardableResult
+    func acceptInvite(token: String) async throws -> LocalBudget {
+        if handledTokens.contains(token), let current = currentBudget { return current }
+        handledTokens.insert(token)
+
+        guard let wire = try await invites.redeemInvite(token: token) else {
+            handledTokens.remove(token)
+            throw InviteError.noLongerValid
+        }
+
+        let id = wire.uniqueId
+        if let existing = try context.fetch(FetchDescriptor<LocalBudget>(
+            predicate: #Predicate { $0.uniqueId == id })).first {
+            // Already here — the link was used on a device that had it anyway.
+            existing.name = wire.name
+            existing.amount = wire.amount
+            existing.startDay = wire.startDay
+            try? context.save()
+            select(existing)
+            return existing
+        }
+
+        let local = LocalBudget(uniqueId: wire.uniqueId, name: wire.name,
+                                startDay: wire.startDay, amount: wire.amount)
+        context.insert(local)
+        try context.save()
+        select(local)
+        return local
+    }
+
+    enum InviteError: LocalizedError {
+        case noLongerValid
+        var errorDescription: String? {
+            "That invitation has already been used, or it has expired. Ask for a new one."
+        }
     }
 
     func updateBudget(_ budget: LocalBudget, name: String, amount: Double, startDay: Int) {
