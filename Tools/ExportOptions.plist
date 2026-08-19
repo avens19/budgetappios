@@ -2,20 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>method</key>
-    <string>app-store-connect</string>
-    <!-- Let Xcode manage the certificate and profile. Manual provisioning means
-         checking a profile into the repo and re-cutting it whenever it expires,
-         which for a one-person project is a maintenance burden with no upside. -->
-    <key>signingStyle</key>
-    <string>automatic</string>
-    <key>destination</key>
-    <string>export</string>
-    <!-- Symbols go up so crash reports in the Reporting API are readable rather
-         than a list of addresses. -->
-    <key>uploadSymbols</key>
-    <true/>
-    <key>manageAppVersionAndBuildNumber</key>
-    <false/>
+	<key>destination</key>
+	<string>export</string>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>teamID</key>
+	<string>YZGA278893</string>
+	<key>uploadSymbols</key>
+	<true/>
 </dict>
 </plist>
