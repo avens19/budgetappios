@@ -31,6 +31,19 @@ final class InteractionTests: XCTestCase {
         return element
     }
 
+    /// A tab button, wherever the platform decided to put it.
+    ///
+    /// The two families need different queries. On iPad the tab bar is a
+    /// control at the top of the window and `app.tabBars` matches nothing at
+    /// all, but the identifier set on the tab item does come through — which
+    /// also avoids colliding with the Week/Month segmented picker on the
+    /// Categories screen. On iPhone it is the reverse: the bottom bar does not
+    /// carry the identifier through, and there `app.tabBars` is unambiguous.
+    private func tab(_ app: XCUIApplication, _ name: String) -> XCUIElement {
+        let byIdentifier = app.descendants(matching: .any)["tab.\(name)"].firstMatch
+        return byIdentifier.exists ? byIdentifier : app.tabBars.buttons[name.capitalized]
+    }
+
     private func launch(tab: String = "week", extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-tab", tab] + extra
@@ -65,7 +78,10 @@ final class InteractionTests: XCTestCase {
 
         app.buttons["saveExpense"].tap()
 
-        XCTAssertTrue(app.staticTexts["Hardware store"].waitForExistence(timeout: 5),
+        // Via the scrolling helper, not a bare `staticTexts` query: on a shorter
+        // phone the day the expense was added to is the last section and sits
+        // below the fold, and a lazy List has not built that row yet.
+        XCTAssertTrue(row(app, "Hardware store").waitForExistence(timeout: 5),
                       "the new expense should be in the week list")
     }
 
@@ -100,7 +116,8 @@ final class InteractionTests: XCTestCase {
         app.textFields["descriptionField"].typeText("Refund")
         app.buttons["saveExpense"].tap()
 
-        XCTAssertTrue(app.staticTexts["Refund"].waitForExistence(timeout: 5))
+        XCTAssertTrue(row(app, "Refund").waitForExistence(timeout: 5),
+                      "income should be listed like any other expense")
     }
 
     // MARK: Editing
@@ -261,14 +278,14 @@ final class InteractionTests: XCTestCase {
         let app = launch()
         XCTAssertTrue(app.staticTexts["Left to spend"].waitForExistence(timeout: 10))
 
-        app.tabBars.buttons["Month"].tap()
+        tab(app, "month").tap()
         XCTAssertTrue(app.staticTexts["Spent this month"].waitForExistence(timeout: 5))
 
-        app.tabBars.buttons["Categories"].tap()
+        tab(app, "categories").tap()
         XCTAssertTrue(app.staticTexts["Tap a category to see its expenses."]
             .waitForExistence(timeout: 5))
 
-        app.tabBars.buttons["Week"].tap()
+        tab(app, "week").tap()
         XCTAssertTrue(app.staticTexts["Left to spend"].waitForExistence(timeout: 5))
     }
 
@@ -321,7 +338,9 @@ final class AccessibilityTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Left to spend"].waitForExistence(timeout: 10),
                       "the hero label should survive the largest text size")
         XCTAssertTrue(app.buttons["addExpense"].exists, "the toolbar should still be usable")
-        XCTAssertTrue(app.tabBars.buttons["Month"].exists, "tabs should still be reachable")
+        XCTAssertTrue(app.descendants(matching: .any)["tab.month"].firstMatch.exists
+                      || app.tabBars.buttons["Month"].exists,
+                      "tabs should still be reachable")
     }
 
     /// Everything interactive needs a label, or VoiceOver announces "button".

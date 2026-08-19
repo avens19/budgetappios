@@ -153,6 +153,7 @@ struct WeekView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .readableContentWidth()
         .navigationTitle(budget.name.isEmpty ? "Weekly Budget" : budget.name)
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await session.syncAndWait() }

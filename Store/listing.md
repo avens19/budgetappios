@@ -4,14 +4,19 @@ Everything App Store Connect asks for, kept here so it is version-controlled and
 can be diffed against what the app actually does — rather than existing only in a
 web form nobody can review.
 
-Screenshots are in `../Screenshots/`, at both sizes Connect asks for:
+Screenshots are in `../Screenshots/`, at every size Connect asks for:
 
-    6.5-*.png   1284×2778   the 6.5" slot (iPhone 11/12/13/14 Pro Max, 14 Plus)
-    6.9-*.png   1320×2868   the 6.9" slot (iPhone 16/17 Pro Max)
+    6.5-*.png     1284×2778   the 6.5" slot (iPhone 11/12/13/14 Pro Max, 14 Plus)
+    6.9-*.png     1320×2868   the 6.9" slot (iPhone 16/17 Pro Max)
+    ipad13-*.png  2064×2752   the 13" iPad slot — required, the app is universal
 
 Which slots a listing shows varies, and Connect rejects anything that is not one
-of its exact sizes rather than scaling it — so both are captured natively from a
+of its exact sizes rather than scaling it — so each is captured natively from a
 simulator of the right model.
+
+The iPad set is not optional: `TARGETED_DEVICE_FAMILY` is `1,2`, so the app is
+offered on iPad and Connect will not accept the listing without it. Three shots
+per size, one per tab.
 
 ---
 

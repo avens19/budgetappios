@@ -201,3 +201,32 @@ struct EmptyState: View {
         }
     }
 }
+
+// MARK: - Readable width
+
+/// Holds a list to a phone-width column, centred in whatever space there is.
+///
+/// These screens are a line of text with a number at the right-hand end. Given
+/// an iPad's width they stretch to it, and a row ends up with a hand's breadth
+/// of nothing between "Coffee" and "$4.75" — legible, but plainly a phone
+/// layout that was handed a bigger window. Insetting the scroll content rather
+/// than framing the list keeps the grouped background filling the window and
+/// leaves the scroll view itself in place, so pull-to-refresh and the toolbar's
+/// scroll-edge effect still behave.
+private struct ReadableContentWidth: ViewModifier {
+    /// About the width of the largest iPhone — the size everything here was
+    /// laid out against.
+    private static let maximum: CGFloat = 560
+
+    func body(content: Content) -> some View {
+        GeometryReader { proxy in
+            content.contentMargins(.horizontal,
+                                   max(0, (proxy.size.width - Self.maximum) / 2),
+                                   for: .scrollContent)
+        }
+    }
+}
+
+extension View {
+    func readableContentWidth() -> some View { modifier(ReadableContentWidth()) }
+}

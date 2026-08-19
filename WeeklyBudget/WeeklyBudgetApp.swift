@@ -123,17 +123,31 @@ struct MainTabs: View {
     var body: some View {
         // `Tab { }` is iOS 18; `.tabItem` is the form that also works on 17,
         // and renders identically.
+        // The identifiers are for the tests, and they are not decoration: on
+        // iPad the tab bar is a control at the top of the window rather than a
+        // bar at the bottom, and "Week" and "Month" are also the two options in
+        // the Categories period picker. Without them a query by label is
+        // ambiguous on exactly the screen where it matters.
         TabView(selection: $selection) {
             NavigationStack { WeekView(budget: budget) }
-                .tabItem { Label("Week", systemImage: "calendar.day.timeline.left") }
+                .tabItem {
+                    Label("Week", systemImage: "calendar.day.timeline.left")
+                        .accessibilityIdentifier("tab.week")
+                }
                 .tag(0)
 
             NavigationStack { MonthView(budget: budget) }
-                .tabItem { Label("Month", systemImage: "calendar") }
+                .tabItem {
+                    Label("Month", systemImage: "calendar")
+                        .accessibilityIdentifier("tab.month")
+                }
                 .tag(1)
 
             NavigationStack { CategoriesView(budget: budget) }
-                .tabItem { Label("Categories", systemImage: "chart.pie") }
+                .tabItem {
+                    Label("Categories", systemImage: "chart.pie")
+                        .accessibilityIdentifier("tab.categories")
+                }
                 .tag(2)
         }
     }

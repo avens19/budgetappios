@@ -147,6 +147,7 @@ struct CategoriesView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .readableContentWidth()
         .navigationTitle("Categories")
         .navigationBarTitleDisplayMode(.inline)
         .refreshable { await session.syncAndWait() }
