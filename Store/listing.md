@@ -3,7 +3,15 @@
 Copy for App Store Connect. Kept here so it is version-controlled and matches
 what the app actually does, rather than living only in a web form.
 
-Screenshots are in `../Screenshots/` at 1320×2868, the 6.9" size Connect wants.
+Screenshots are in `../Screenshots/`, at both sizes Connect asks for:
+
+    6.5-*.png   1284×2778   the 6.5" slot (iPhone 11/12/13/14 Pro Max, 14 Plus)
+    6.9-*.png   1320×2868   the 6.9" slot (iPhone 16/17 Pro Max)
+
+Which slots a listing shows varies, and Connect rejects anything that is not one
+of its exact sizes rather than scaling it — so both are captured natively from a
+simulator of the right model. Rescaling the 6.9" set would have meant either
+padding or cropping, since the two aspect ratios are not identical.
 
 ## Name
 
