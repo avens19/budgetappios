@@ -2,11 +2,11 @@
 #
 # Archive, export and upload to App Store Connect.
 #
-#   export ASC_KEY_ID=XXXXXXXXXX
-#   export ASC_ISSUER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-#   export ASC_KEY_PATH=~/private_keys/AuthKey_XXXXXXXXXX.p8
-#   ./Tools/appstore_upload.sh            # archive, export, upload
-#   ./Tools/appstore_upload.sh --dry-run  # archive and export only
+#   ./Tools/appstore_upload.sh            # archive, sign, upload
+#   ./Tools/appstore_upload.sh --dry-run  # archive and sign, write an .ipa
+#
+# Needs only the Apple ID signed into Xcode. No API key, no app-specific
+# password, no keychain juggling.
 #
 # The archive is built unsigned and signed during export, which is deliberate.
 # `xcodebuild archive` with automatic signing asks for a *development* profile,
@@ -25,20 +25,11 @@ set -euo pipefail
 DRY_RUN=0
 [[ "${1:-}" == "--dry-run" ]] && DRY_RUN=1
 
-# Signing uses the Apple ID signed into Xcode. Only the upload needs a separate
-# credential: either an App Store Connect API key, or an app-specific password.
-if [[ "$DRY_RUN" == 0 ]]; then
-  if [[ -n "${ASC_KEY_ID:-}" ]]; then
-    : "${ASC_ISSUER_ID:?ASC_KEY_ID is set, so ASC_ISSUER_ID is needed too}"
-    AUTH=(--apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID")
-  elif [[ -n "${APP_PASSWORD:-}" ]]; then
-    : "${APPLE_ID:?set APPLE_ID alongside APP_PASSWORD}"
-    AUTH=(--username "$APPLE_ID" --password "@env:APP_PASSWORD")
-  else
-    echo "set either ASC_KEY_ID + ASC_ISSUER_ID, or APPLE_ID + APP_PASSWORD" >&2
-    exit 2
-  fi
-fi
+# No separate upload credential is needed. `xcodebuild -exportArchive` with
+# destination=upload authenticates with the Apple ID already signed into Xcode
+# and uploads as part of the export, so there is no altool step and no
+# app-specific password or API key to manage. That also means one authenticated
+# tool does the whole job instead of two.
 
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -62,26 +53,28 @@ xcodebuild -scheme WeeklyBudget -configuration Release \
   CURRENT_PROJECT_VERSION="$BUILD" \
   archive
 
-step "Exporting"
+# destination=export writes an .ipa; destination=upload sends it. Dry runs take
+# the first path so a build can be inspected without shipping it.
+OPTIONS=Tools/ExportOptions.plist
+if [[ "$DRY_RUN" == 0 ]]; then
+  OPTIONS=$(mktemp -t ExportOptions).plist
+  cp Tools/ExportOptions.plist "$OPTIONS"
+  /usr/libexec/PlistBuddy -c "Set :destination upload" "$OPTIONS"
+fi
+
+step "$([[ "$DRY_RUN" == 1 ]] && echo Exporting || echo 'Exporting and uploading')"
 rm -rf "$OUT/export"
 xcodebuild -exportArchive -archivePath "$ARCHIVE" \
-  -exportOptionsPlist Tools/ExportOptions.plist \
+  -exportOptionsPlist "$OPTIONS" \
   -exportPath "$OUT/export" \
   -allowProvisioningUpdates
 
-IPA=$(find "$OUT/export" -name '*.ipa' | head -1)
-[[ -n "$IPA" ]] || { echo "no .ipa produced" >&2; exit 1; }
-printf '    %s (%s)\n' "$IPA" "$(du -h "$IPA" | cut -f1)"
-
-step "Validating"
 if [[ "$DRY_RUN" == 1 ]]; then
-  step "Dry run — built and exported, not validated or uploaded"
+  IPA=$(find "$OUT/export" -name '*.ipa' | head -1)
+  step "Dry run — exported, not uploaded"
+  printf '    %s (%s)\n' "$IPA" "$(du -h "$IPA" | cut -f1)"
   exit 0
 fi
-xcrun altool --validate-app -f "$IPA" -t ios "${AUTH[@]}"
-
-step "Uploading"
-xcrun altool --upload-app -f "$IPA" -t ios "${AUTH[@]}"
 
 step "Uploaded build $BUILD"
 echo "    It appears in App Store Connect after processing, usually 5-15 minutes."
