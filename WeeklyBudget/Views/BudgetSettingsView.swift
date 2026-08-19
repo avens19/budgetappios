@@ -22,6 +22,10 @@ struct BudgetSettingsView: View {
     private static let weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday",
                                    "Thursday", "Friday", "Saturday"]
 
+    /// Built from the API host rather than written out again, so a move takes
+    /// the link with it.
+    private static let appsPage = LiveAPIClient.productionURL.appending(path: "Apps")
+
     private var parsedAmount: Double? { Double(amount.replacingOccurrences(of: ",", with: ".")) }
 
     var body: some View {
@@ -70,7 +74,7 @@ struct BudgetSettingsView: View {
                     Label("Share budget ID", systemImage: "square.and.arrow.up")
                 }
             } footer: {
-                Text("Enter this ID on another device — including the Android app or the web app — to use the same budget.")
+                Text("Enter this ID on another device — another phone, or the web app — to use the same budget.")
             }
 
             if budgets.count > 1 {
@@ -101,6 +105,14 @@ struct BudgetSettingsView: View {
                 }
                 NavigationLink { HowItWorksView() } label: {
                     Label("How this works", systemImage: "questionmark.circle")
+                }
+                // A page on the web app, not a store link, and the reason is
+                // App Store guideline 2.3.10: an app may not name or picture
+                // other mobile platforms. That page can say plainly what runs
+                // on what, and it is where the Android app points too, so
+                // neither build has to mention the other.
+                Link(destination: Self.appsPage) {
+                    Label("Apps for other devices", systemImage: "arrow.up.forward.app")
                 }
             }
 

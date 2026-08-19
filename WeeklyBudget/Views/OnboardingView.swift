@@ -33,7 +33,7 @@ struct OnboardingView: View {
                     "Open Settings, copy the budget ID, and enter it on the other device. You will both see the same running total."]),
         Page(symbol: "iphone.and.arrow.forward",
              title: "It works with the others",
-             body: ["The same budget opens in the Android app and at budget.andrewovens.com, with the same expenses and the same total.",
+             body: ["The same budget opens on other phones and at budget.andrewovens.com, with the same expenses and the same total.",
                     "Add an expense on any of them and the rest catch up within seconds."]),
     ]
 
@@ -214,7 +214,7 @@ struct HowItWorksView: View {
         Item(symbol: "person.2.fill", title: "Share it with your partner",
              body: "One budget can live on as many devices as you like, and they all stay in step. Copy the budget ID from Settings and enter it on the other device."),
         Item(symbol: "iphone.and.arrow.forward", title: "It works with the others",
-             body: "The same budget opens in the Android app and at budget.andrewovens.com, with the same expenses and the same total."),
+             body: "The same budget opens on other phones and at budget.andrewovens.com, with the same expenses and the same total."),
     ]
 
     var body: some View {

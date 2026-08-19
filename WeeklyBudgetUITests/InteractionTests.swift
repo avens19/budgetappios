@@ -319,6 +319,10 @@ final class InteractionTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Budget ID"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Share budget ID"].exists)
         XCTAssertTrue(app.buttons["How this works"].exists)
+        // Present but deliberately not tapped: it leaves the app for Safari,
+        // and a test that walks out of the app under test cannot assert much.
+        XCTAssertTrue(app.buttons["Apps for other devices"].exists,
+                      "the link to the other clients should be reachable")
     }
 }
 

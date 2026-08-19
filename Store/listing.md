@@ -29,6 +29,11 @@ Play, where the Android app keeps that name. The home-screen name is separate an
 stays "Weekly Budget" (`INFOPLIST_KEY_CFBundleDisplayName`), so on a phone with
 both apps the icons match.
 
+Nothing below names Android, on purpose. Guideline 2.3.10 disallows naming other
+mobile platforms in an app *or its metadata*, and a first submission is a poor
+place to test how strictly that is read — so the copy says "other phones" and the
+in-app link goes to budget.andrewovens.com/Apps, which is free to be specific.
+
 ## Subtitle (30 max)
 
 Budget by the week, together
@@ -40,7 +45,7 @@ adds "budget" and "together" instead.
 ## Promotional text (170 max)
 
 One number, kept honest: what is left to spend this week. Share a budget with a
-partner and it stays in step across iPhone, Android and the web — no account
+partner and it stays in step across their phone and the web too — no account
 needed.
 
 Promotional text can be changed any time without submitting a new build, so it is
@@ -71,9 +76,9 @@ One budget can live on as many devices as you like. Copy the budget ID, enter it
 on your partner's phone, and you both see the same running total within seconds —
 add a coffee on the way home and it is there before you are.
 
-The same budget opens in the Weekly Budget Android app and at
-budget.andrewovens.com, so a household running a mix of phones is not a problem,
-and neither is checking it from a laptop.
+The same budget opens on other phones and at budget.andrewovens.com, so a
+household running a mix of phones is not a problem, and neither is checking it
+from a laptop.
 
 WORKS WITHOUT A SIGNAL
 
@@ -112,9 +117,9 @@ the name and subtitle, and repeating them here would waste the allowance.
 
 First release.
 
-Weekly Spend has been the Android app Weekly Budget for years; this is the same
-budget, same server, on iPhone. If you already use it elsewhere, enter your
-budget ID in Settings and everything appears.
+This is the same budget and the same server that other versions of the app have
+used for years — only now on iPhone and iPad. If you already use it elsewhere,
+enter your budget ID in Settings and everything appears.
 
 ## Categories
 
@@ -166,3 +171,8 @@ devices works, and it is stated plainly in the privacy policy.
 
 Income is entered as an expense with a negative amount. This is deliberate and
 explained in the app's own "How this works" screen, reachable from Settings.
+
+For context, since these notes are not public: this app has existed on another
+platform for several years and this is the same product on the same server, which
+is why it arrives feature-complete rather than as a first draft. "Apps for other
+devices" in Settings opens a page on the developer's own site, not a store.
