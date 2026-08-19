@@ -7,7 +7,15 @@ Screenshots are in `../Screenshots/` at 1320×2868, the 6.9" size Connect wants.
 
 ## Name
 
-Weekly Budget
+Weekly Spend
+
+"Weekly Budget" is taken on the App Store, where names are globally unique —
+unlike Google Play, where the Android app keeps that name. "Weekly Spend" holds
+onto the words someone looking for this would actually search for.
+
+The home-screen name is separate and stays "Weekly Budget"
+(INFOPLIST_KEY_CFBundleDisplayName), so the icon matches the Android app on a
+phone that has both.
 
 ## Subtitle (30 characters max)
 
@@ -20,7 +28,7 @@ partner and it stays in step across iPhone, Android and the web.
 
 ## Description
 
-Weekly Budget answers one question: how much is left to spend this week?
+Weekly Spend answers one question: how much is left to spend this week?
 
 Work out what you have after the bills that never change — rent, insurance,
 subscriptions — split it across the weeks in the month, and that is your weekly
