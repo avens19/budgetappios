@@ -15,6 +15,7 @@ struct BudgetSettingsView: View {
     @State private var startDay = 0
     @State private var copied = false
     @State private var confirmingForget = false
+    @AppStorage(Density.key) private var dense = false
     @State private var invite: WireInvite?
     @State private var invitingBusy = false
     @State private var inviteError: String?
@@ -141,6 +142,15 @@ struct BudgetSettingsView: View {
                         }
                     }
                 }
+            }
+
+            Section {
+                Toggle(isOn: $dense) {
+                    Label("Compact layout", systemImage: "list.bullet")
+                }
+                .accessibilityIdentifier("compactLayout")
+            } footer: {
+                Text("Fits more on screen: one running list for the week instead of a heading per day, and a smaller balance strip.")
             }
 
             Section {

@@ -46,7 +46,12 @@ final class InteractionTests: XCTestCase {
 
     private func launch(tab: String = "week", extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-tab", tab] + extra
+        // The layout is pinned on every launch. Density is an @AppStorage
+        // preference, which lives in UserDefaults and so survives -resetStore —
+        // without this, one test run in compact mode would silently change the
+        // shape of the screen every later test asserts against.
+        let density = extra.contains("-dense") ? [] : ["-roomy"]
+        app.launchArguments = ["-demo", "-tab", tab] + density + extra
         // A fresh store per test: otherwise one test's new expense changes the
         // totals the next one asserts on.
         app.launchArguments += ["-resetStore"]
@@ -272,6 +277,64 @@ final class InteractionTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Leisure"].waitForExistence(timeout: 5))
     }
 
+    // MARK: Density
+
+    func test_compactLayoutIsFlatWithTheTotalUnderTheTable() {
+        let app = launch(extra: ["-dense"])
+
+        XCTAssertTrue(app.staticTexts["Spent this week"].waitForExistence(timeout: 10),
+                      "compact puts the week's total under the table, not in the strip")
+
+        // A compact row carries the day where the category name goes in the roomy
+        // one; the category is the colour of the dot. Asserting on the combined
+        // label is how the two shapes are told apart without depending on today's
+        // date, which the demo data is seeded relative to.
+        let row = self.row(app, "Big shop")
+        XCTAssertTrue(row.exists, "rows should still be there")
+        XCTAssertFalse(row.label.contains("Groceries"),
+                       "compact rows show the day, not the category: \(row.label)")
+    }
+
+    func test_roomyLayoutKeepsItsHeadingsAndCategories() {
+        // The layout the first release ships. Worth pinning: compact was added
+        // beside it and must not have changed it.
+        let app = launch(extra: ["-roomy"])
+
+        let row = self.row(app, "Big shop")
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        XCTAssertTrue(row.label.contains("Groceries"),
+                      "roomy rows name the category: \(row.label)")
+        XCTAssertFalse(app.staticTexts["Spent this week"].exists,
+                       "the roomy strip keeps its own spent-of line")
+    }
+
+    func test_compactRowsKeepSwipeToDelete() {
+        // The row builder is shared between the layouts precisely so an action
+        // cannot go missing from one of them. This is that, asserted.
+        let app = launch(extra: ["-dense"])
+
+        let row = self.row(app, "Coffee")
+        XCTAssertTrue(row.waitForExistence(timeout: 10))
+        row.swipeLeft()
+
+        let delete = app.buttons["Delete"]
+        XCTAssertTrue(delete.waitForExistence(timeout: 3), "swipe to delete should still work")
+        delete.tap()
+
+        XCTAssertTrue(app.staticTexts["Left to spend"].waitForExistence(timeout: 3)
+                      || app.staticTexts["Spent this week"].waitForExistence(timeout: 3))
+        XCTAssertFalse(self.row(app, "Coffee").exists, "the row should be gone")
+    }
+
+    func test_settingsOffersCompactLayout() {
+        let app = launch()
+        XCTAssertTrue(app.buttons["budgetSettings"].waitForExistence(timeout: 10))
+        app.buttons["budgetSettings"].tap()
+
+        let toggle = app.switches["compactLayout"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 5), "compact layout should be a setting")
+    }
+
     // MARK: Navigation
 
     func test_tabsSwitchBetweenTheThreeScreens() {
@@ -318,7 +381,16 @@ final class InteractionTests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Budget ID"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Share budget ID"].exists)
-        XCTAssertTrue(app.buttons["How this works"].exists)
+
+        // A Form builds its rows lazily, and this sheet is now long enough that the
+        // lower ones are not realised until they are scrolled to.
+        let howItWorks = app.buttons["How this works"]
+        var attempts = 0
+        while !howItWorks.exists && attempts < 6 {
+            app.swipeUp()
+            attempts += 1
+        }
+        XCTAssertTrue(howItWorks.exists)
         // Present but deliberately not tapped: it leaves the app for Safari,
         // and a test that walks out of the app under test cannot assert much.
         XCTAssertTrue(app.buttons["Apps for other devices"].exists,
@@ -340,7 +412,9 @@ final class AccessibilityTests: XCTestCase {
     /// default size fall apart here, and this is where truncation shows up.
     func test_readableAtTheLargestTextSize() {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-tab", "week", "-resetStore",
+        // -roomy for the same reason as the interaction tests: density persists in
+        // UserDefaults, so an earlier compact run would change what this asserts.
+        app.launchArguments = ["-demo", "-tab", "week", "-resetStore", "-roomy",
                                "-UIPreferredContentSizeCategoryName",
                                "UICTContentSizeCategoryAccessibilityXXXL"]
         app.launch()
@@ -356,7 +430,7 @@ final class AccessibilityTests: XCTestCase {
     /// Everything interactive needs a label, or VoiceOver announces "button".
     func test_controlsAreLabelledForVoiceOver() {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "-tab", "week", "-resetStore"]
+        app.launchArguments = ["-demo", "-tab", "week", "-resetStore", "-roomy"]
         app.launch()
         XCTAssertTrue(app.staticTexts["Left to spend"].waitForExistence(timeout: 10))
 

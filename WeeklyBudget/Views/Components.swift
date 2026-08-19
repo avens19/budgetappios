@@ -47,6 +47,45 @@ extension Date {
     }
 }
 
+// MARK: - Density
+
+/// Whether to draw the week compactly.
+///
+/// Asked for by long-time Android users of the pre-2026 layout, and their
+/// reasoning carries over unchanged: the roomy design shows very few expenses at
+/// once, and splitting the week by day works against people who treat it as one
+/// running list and do not always file an expense under the right day.
+///
+/// `@AppStorage`, so it is a preference of this device and not of the budget —
+/// two people sharing one can each have the layout they want, and nothing about
+/// it syncs.
+enum Density {
+    static let key = "layout.dense"
+}
+
+/// Applies a list style by density.
+///
+/// A modifier because `listStyle` takes different types: the ternary that would
+/// read naturally does not type-check, and duplicating the whole `List` to
+/// change one modifier is how two layouts drift apart.
+struct DensityListStyle: ViewModifier {
+    let dense: Bool
+
+    func body(content: Content) -> some View {
+        if dense {
+            // Full-width rows with hairline separators, which is the compact look:
+            // inset-grouped draws every row as its own rounded card.
+            content.listStyle(.plain)
+        } else {
+            content.listStyle(.insetGrouped)
+        }
+    }
+}
+
+extension View {
+    func densityListStyle(dense: Bool) -> some View { modifier(DensityListStyle(dense: dense)) }
+}
+
 // MARK: - Hero
 
 /// The number the whole app exists to show: what is left this week.
@@ -55,11 +94,53 @@ struct HeroCard: View {
     let spent: Double
     let limit: Double
     let onCarry: (() -> Void)?
+    /// Compact: no caption, no spent-of line — that moves under the table — and
+    /// the number shares its row with Carry so the card loses a line rather than
+    /// merely emptying one.
+    var dense: Bool = false
 
     private var isOver: Bool { spent > limit }
     private var fraction: Double { limit <= 0 ? 0 : min(max(spent / limit, 0), 1) }
 
     var body: some View {
+        if dense { compact } else { roomy }
+    }
+
+    private var compact: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(isOver ? "\(Money.string(abs(remaining))) over" : "\(Money.string(abs(remaining))) left")
+                    .font(.title2.weight(.semibold).monospacedDigit())
+                    .contentTransition(.numericText())
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                    .accessibilityLabel(isOver
+                        ? "Over budget by \(Money.string(abs(remaining)))"
+                        : "\(Money.string(abs(remaining))) left to spend")
+
+                Spacer(minLength: 8)
+
+                if let onCarry {
+                    Button("Carry balance", action: onCarry)
+                        .accessibilityIdentifier("carryBalance")
+                        .font(.footnote.weight(.medium))
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(.tint)
+                }
+            }
+
+            ProgressView(value: fraction)
+                .tint(isOver ? Color(.systemRed) : .accentColor)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(isOver ? Color(.systemRed).opacity(0.12) : Color.accentColor.opacity(0.12),
+                    in: RoundedRectangle(cornerRadius: 14))
+        .foregroundStyle(isOver ? Color(.systemRed) : Color.accentColor)
+    }
+
+    private var roomy: some View {
         VStack(alignment: .leading, spacing: 12) {
             // The numbers read as one sentence, so VoiceOver says
             // "$202.20 left to spend, $197.80 of $400.00" rather than four
@@ -156,8 +237,46 @@ struct PeriodStepper: View {
 struct ExpenseRow: View {
     let expense: LocalExpense
     let palette: CategoryPalette
+    /// Compact: one line, with the day where the category name was.
+    ///
+    /// Compact mode drops the day headings, so the row has to say when. The
+    /// category is not lost — it is the colour of the dot, which is the same
+    /// colour on every client.
+    var dense: Bool = false
 
     var body: some View {
+        if dense { compact } else { roomy }
+    }
+
+    private var compact: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(Color.chart(slot: palette.slot(for: expense.categoryId)))
+                .frame(width: 8, height: 8)
+
+            Text(expense.detail)
+                .lineLimit(1)
+
+            Spacer(minLength: 8)
+
+            Text(expense.date.budgetFormatted(.dateTime.weekday(.abbreviated)))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            // A fixed trailing column, so the day sits at the same place on every
+            // row. Left to size itself the amount drags the day left and right and
+            // a dense table stops reading as columns.
+            Text(Money.string(expense.amount))
+                .monospacedDigit()
+                .foregroundStyle(expense.amount < 0 ? Color.accentColor : .primary)
+                .frame(minWidth: 76, alignment: .trailing)
+        }
+        .padding(.vertical, 2)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+
+    private var roomy: some View {
         HStack(spacing: 12) {
             Circle()
                 .fill(Color.chart(slot: palette.slot(for: expense.categoryId)))
@@ -183,6 +302,31 @@ struct ExpenseRow: View {
         // row, and where a thumb naturally lands — hit nothing at all.
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - Total
+
+/// The week's spend against its budget, as the last row of the table.
+///
+/// Compact mode has no day headings and no room in the balance strip for this, so
+/// it goes where a total belongs: under the things it adds up.
+struct WeekTotalRow: View {
+    let spent: Double
+    let limit: Double
+
+    var body: some View {
+        HStack {
+            Text("Spent this week")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text("\(Money.string(spent)) of \(Money.string(limit))")
+                .font(.subheadline)
+                .monospacedDigit()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Spent this week, \(Money.string(spent)) of \(Money.string(limit))")
     }
 }
 

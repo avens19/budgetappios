@@ -9,6 +9,18 @@ struct WeeklyBudgetApp: App {
     @State private var session: BudgetSession
 
     init() {
+        #if DEBUG
+        // Density is read through @AppStorage, and a bare `-layout.dense 1` on the
+        // command line does not reach it reliably — so the switch is explicit, like
+        // -demo and -resetStore. Tests and screenshot runs need to pick a layout
+        // without driving the settings sheet to get there.
+        if CommandLine.arguments.contains("-dense") {
+            UserDefaults.standard.set(true, forKey: Density.key)
+        } else if CommandLine.arguments.contains("-roomy") {
+            UserDefaults.standard.set(false, forKey: Density.key)
+        }
+        #endif
+
         do {
             #if DEBUG
             // UI tests each want the same starting state, and one test's new

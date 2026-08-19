@@ -11,6 +11,8 @@ struct WeekView: View {
     @State private var anchor = BudgetCalendar.today()
     @State private var confirmingCarry = false
 
+    @AppStorage(Density.key) private var dense = false
+
     /// One sheet, not four.
     ///
     /// Stacking several `.sheet` modifiers on the same view does not reliably
@@ -98,9 +100,11 @@ struct WeekView: View {
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
                 HeroCard(remaining: remaining, spent: spent, limit: budget.amount,
-                         onCarry: remaining >= 0.01 ? { confirmingCarry = true } : nil)
+                         onCarry: remaining >= 0.01 ? { confirmingCarry = true } : nil,
+                         dense: dense)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 12, trailing: 16))
+                    .listRowInsets(EdgeInsets(top: 4, leading: dense ? 8 : 16,
+                                              bottom: dense ? 6 : 12, trailing: dense ? 8 : 16))
             }
             .listRowBackground(Color.clear)
 
@@ -114,45 +118,35 @@ struct WeekView: View {
                 }
             }
 
-            ForEach(days, id: \.date) { day in
+            if dense {
+                // One running list in date order, deliberately: several long-time
+                // users treat the week that way and do not always file an expense
+                // under the right day.
                 Section {
-                    ForEach(day.rows) { expense in
-                        Button { sheet = .edit(expense) } label: {
-                            ExpenseRow(expense: expense, palette: palette)
-                        }
-                        .buttonStyle(.plain)
-                        // Swipe to delete is what an iOS user reaches for first;
-                        // the context menu carries the rarer actions.
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                session.deleteExpense(expense)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                        .contextMenu {
-                            Button {
-                                session.copyToNextWeek(expense, in: budget)
-                            } label: {
-                                Label("Copy to next week", systemImage: "calendar.badge.plus")
-                            }
-                            Button(role: .destructive) {
-                                session.deleteExpense(expense)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
+                    ForEach(expenses) { expense in
+                        row(for: expense)
                     }
-                } header: {
-                    HStack {
-                        Text(day.date.dayHeading)
-                        Spacer()
-                        Text(Money.string(day.total)).monospacedDigit()
+                    if !expenses.isEmpty {
+                        WeekTotalRow(spent: spent, limit: budget.amount)
+                    }
+                }
+            } else {
+                ForEach(days, id: \.date) { day in
+                    Section {
+                        ForEach(day.rows) { expense in
+                            row(for: expense)
+                        }
+                    } header: {
+                        HStack {
+                            Text(day.date.dayHeading)
+                            Spacer()
+                            Text(Money.string(day.total)).monospacedDigit()
+                        }
                     }
                 }
             }
         }
-        .listStyle(.insetGrouped)
+        .densityListStyle(dense: dense)
         .readableContentWidth()
         .navigationTitle(budget.name.isEmpty ? "Weekly Budget" : budget.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -195,6 +189,38 @@ struct WeekView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Next week's spending goes up by \(Money.string(remaining)).")
+        }
+    }
+
+    /// One row, whichever layout is showing: the density changes how a row looks,
+    /// never what it can do. Written once so the swipe and the context menu cannot
+    /// go missing from one of them.
+    @ViewBuilder
+    private func row(for expense: LocalExpense) -> some View {
+        Button { sheet = .edit(expense) } label: {
+            ExpenseRow(expense: expense, palette: palette, dense: dense)
+        }
+        .buttonStyle(.plain)
+        // Swipe to delete is what an iOS user reaches for first; the context menu
+        // carries the rarer actions.
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+                session.deleteExpense(expense)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .contextMenu {
+            Button {
+                session.copyToNextWeek(expense, in: budget)
+            } label: {
+                Label("Copy to next week", systemImage: "calendar.badge.plus")
+            }
+            Button(role: .destructive) {
+                session.deleteExpense(expense)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 
