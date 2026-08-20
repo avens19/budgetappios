@@ -168,6 +168,9 @@ struct BudgetSettingsView: View {
                 Link(destination: Self.appsPage) {
                     Label("Apps for other devices", systemImage: "arrow.up.forward.app")
                 }
+                NavigationLink { AboutView() } label: {
+                    Label("About", systemImage: "info.circle")
+                }
             }
 
             Section {
