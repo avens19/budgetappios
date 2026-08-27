@@ -4,6 +4,18 @@ Everything App Store Connect asks for, kept here so it is version-controlled and
 can be diffed against what the app actually does — rather than existing only in a
 web form nobody can review.
 
+**The text itself lives in `metadata/<locale>.json`**, English and the twenty
+languages the app ships. This file is the reasoning behind it: why the name is
+what it is, why the keywords leave out the obvious words, what Connect wants in
+the fields that are not translated at all.
+
+`python3 ../Tools/check_store_metadata.py` checks every locale against Apple's
+limits — name and subtitle 30 characters, promotional text 170, keywords 100,
+description and what's new 4000 — and against guideline 2.3.10, which disallows
+naming another mobile platform anywhere in the metadata. Connect enforces the
+limits one field at a time as you paste; the script does all twenty-one locales
+at once.
+
 Screenshots are in `../Screenshots/`, at every size Connect asks for:
 
     6.5-*.png     1284×2778   the 6.5" slot (iPhone 11/12/13/14 Pro Max, 14 Plus)
@@ -22,9 +34,7 @@ per size, one per tab.
 
 ## Name (30 max)
 
-Weekly Spend
-
-"Weekly Budget" is taken; App Store names are globally unique, unlike Google
+`name` — the same in every locale. "Weekly Budget" is taken; App Store names are globally unique, unlike Google
 Play, where the Android app keeps that name. The home-screen name is separate and
 stays "Weekly Budget" (`INFOPLIST_KEY_CFBundleDisplayName`), so on a phone with
 both apps the icons match.
@@ -36,78 +46,34 @@ in-app link goes to budget.andrewovens.com/Apps, which is free to be specific.
 
 ## Subtitle (30 max)
 
-Budget by the week, together
-
-Deliberately does not repeat "weekly" or "spend". Apple indexes the name,
+`subtitle`. Deliberately does not repeat "weekly" or "spend". Apple indexes the name,
 subtitle and keywords as one pool, so a word spent twice is a word wasted — this
 adds "budget" and "together" instead.
 
 ## Promotional text (170 max)
 
-One number, kept honest: what is left to spend this week. Share a budget with a
-partner and it stays in step across their phone and the web too — no account
-needed.
+`promotionalText`. The tightest field after the subtitle: French lands at 167 of
+the 170 characters, so a longer English line would not survive translation.
 
 Promotional text can be changed any time without submitting a new build, so it is
 the right place for anything seasonal or temporary.
 
 ## Description (4000 max)
 
-Weekly Spend answers one question: how much is left to spend this week?
+`description`. Structured as: what it answers, what it deliberately does not do,
+sharing, offline, a feature list, and the privacy paragraph. The section headings
+are shouted in the English because the App Store has no formatting; each
+translation shouts in whatever way that language does — the CJK locales use
+bracketed headings instead of capitals, which do not exist there.
 
-Work out what you have after the bills that never change — rent, insurance,
-subscriptions — split it across the weeks in the month, and that is your weekly
-target. Add expenses as you go and watch the number come down. That is the whole
-idea.
-
-WHAT IT DELIBERATELY DOES NOT DO
-
-There is nowhere to enter your salary, your rent, or any other recurring amount.
-Those numbers are already decided, and putting them in an app does not change
-them. Leaving them out is what keeps this on the one figure that actually moves
-day to day. If money arrives mid-week — a refund, a gift, cash back — add it as
-an expense with a minus sign.
-
-No budgets to rebalance every month. No charts to interpret. No lectures.
-
-SHARED, PROPERLY
-
-One budget can live on as many devices as you like. Copy the budget ID, enter it
-on your partner's phone, and you both see the same running total within seconds —
-add a coffee on the way home and it is there before you are.
-
-The same budget opens on other phones and at budget.andrewovens.com, so a
-household running a mix of phones is not a problem, and neither is checking it
-from a laptop.
-
-WORKS WITHOUT A SIGNAL
-
-Everything lives on the device and syncs when it can. Add an expense in a
-basement car park and it is saved; it reaches the other devices when you surface.
-Nothing is lost waiting for a connection.
-
-WHAT YOU GET
-
-• One clear number: what is left this week
-• Expenses grouped by day, with a running total for each
-• Categories, and a breakdown by week or month
-• A month view showing every week against your target
-• Carry an unspent balance forward into next week
-• Copy a repeating expense to next week in one tap
-
-NO ACCOUNTS, NO ADVERTISING, NO TRACKING
-
-There is nothing to sign up for and no password to forget. No advertising, no
-analytics SDKs, no third-party services of any kind. There is no name, email
-address or phone number collected, because there is nowhere to enter one — a
-budget is identified by a random ID that only you and the people you share it
-with have.
-
-Built and run by one person, not a company with an exit strategy.
+The wording matches the app's own copy where they overlap. Someone who reads the
+listing and then opens the tutorial should not be told two different things.
 
 ## Keywords (100 max, comma separated, no spaces)
 
-allowance,expenses,tracker,money,cash,couples,partner,shared,envelope,simple,pocket,paycheck
+`keywords`. Not a translation: each locale gets the words people actually search
+for in that language, and the words already indexed from that locale's name and
+subtitle are left out of it.
 
 Chosen to add terms the name and subtitle do not already cover. "weekly",
 "spend", "budget" and "together" are omitted on purpose — they are indexed from
@@ -115,11 +81,8 @@ the name and subtitle, and repeating them here would waste the allowance.
 
 ## What's New (4000 max)
 
-First release.
-
-This is the same budget and the same server that other versions of the app have
-used for years — only now on iPhone and iPad. If you already use it elsewhere,
-enter your budget ID in Settings and everything appears.
+`whatsNew`, replaced for each release. The text currently in the files is for the
+release that adds the twenty languages and the weekly-number helper.
 
 ## Categories
 
