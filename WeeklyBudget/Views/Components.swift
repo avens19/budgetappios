@@ -63,6 +63,28 @@ enum Density {
     static let key = "layout.dense"
 }
 
+// MARK: - Suggested amount
+
+/// A weekly figure worked out in the helper before a budget existed.
+///
+/// The helper can be opened from the tutorial, which runs before there is
+/// anything to save it to, so the figure waits here for the form on the next
+/// screen. `@AppStorage` rather than passed down: the two screens are a sheet
+/// apart with the tutorial's pager in between, and threading a binding through
+/// that is more machinery than a number that lives for one screen deserves.
+///
+/// Zero means nothing is waiting, which is also what a helper answer can never
+/// be — the button that sets it is disabled at zero and below.
+enum SuggestedAmount {
+    static let key = "budget.suggestedWeeklyAmount"
+
+    /// Formatted the way the amount field wants it: plain digits with a dot,
+    /// which is what `Double(_:)` on the other side will accept back.
+    static func text(_ value: Double) -> String {
+        String(format: "%.2f", value)
+    }
+}
+
 /// Applies a list style by density.
 ///
 /// A modifier because `listStyle` takes different types: the ternary that would

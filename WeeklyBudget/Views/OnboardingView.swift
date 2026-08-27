@@ -10,6 +10,11 @@ import BudgetCore
 struct OnboardingView: View {
     @State private var page = 0
     @State private var showingSetup = false
+    @State private var showingHelper = false
+
+    /// A figure worked out here has nowhere to go yet — there is no budget —
+    /// so it waits for the form on the next screen to pick it up.
+    @AppStorage(SuggestedAmount.key) private var suggestedAmount = 0.0
 
     private struct Page: Identifiable {
         let id = UUID()
@@ -59,6 +64,12 @@ struct OnboardingView: View {
                                 .multilineTextAlignment(.center)
                                 .foregroundStyle(.secondary)
                         }
+
+                        if index == 0 {
+                            Button("Work it out with me") { showingHelper = true }
+                                .buttonStyle(.bordered)
+                                .padding(.top, 4)
+                        }
                         Spacer()
                         Spacer()
                     }
@@ -87,6 +98,11 @@ struct OnboardingView: View {
             NavigationStack { FirstBudgetView() }
                 .interactiveDismissDisabled()
         }
+        .sheet(isPresented: $showingHelper) {
+            NavigationStack {
+                WeeklyNumberView { suggestedAmount = $0 }
+            }
+        }
     }
 }
 
@@ -101,6 +117,11 @@ struct FirstBudgetView: View {
     @State private var joinId = ""
     @State private var busy = false
     @State private var error: String?
+    @State private var showingHelper = false
+
+    /// Set by the helper during the tutorial, when there was no budget yet to
+    /// put it in. Consumed once, on appear, so it cannot overwrite typing.
+    @AppStorage(SuggestedAmount.key) private var suggestedAmount = 0.0
 
     enum Mode: String, CaseIterable { case create = "Create", join = "Join" }
 
@@ -134,6 +155,7 @@ struct FirstBudgetView: View {
                                   "Thursday", "Friday", "Saturday"][$0]).tag($0)
                         }
                     }
+                    Button("Not sure? Work it out") { showingHelper = true }
                 } footer: {
                     Text("What you can spend in a week, after the bills that never change.")
                 }
@@ -161,6 +183,17 @@ struct FirstBudgetView: View {
         }
         .navigationTitle(mode == .create ? "New budget" : "Join a budget")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            if amount.isEmpty, suggestedAmount > 0 {
+                amount = SuggestedAmount.text(suggestedAmount)
+                suggestedAmount = 0
+            }
+        }
+        .sheet(isPresented: $showingHelper) {
+            NavigationStack {
+                WeeklyNumberView { amount = SuggestedAmount.text($0) }
+            }
+        }
         .overlay {
             if busy { ProgressView().controlSize(.large) }
         }

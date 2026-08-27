@@ -16,6 +16,7 @@ struct BudgetSettingsView: View {
     @State private var copied = false
     @State private var confirmingForget = false
     @AppStorage(Density.key) private var dense = false
+    @State private var showingHelper = false
     @State private var invite: WireInvite?
     @State private var invitingBusy = false
     @State private var inviteError: String?
@@ -47,6 +48,9 @@ struct BudgetSettingsView: View {
                 Picker("Week starts on", selection: $startDay) {
                     ForEach(0..<7, id: \.self) { Text(Self.weekdays[$0]).tag($0) }
                 }
+                // Next to the field that asks the question people cannot
+                // answer, rather than buried with the other links below.
+                Button("Not sure? Work it out") { showingHelper = true }
             }
 
             // The way to hand this budget to someone. Above the raw id because it
@@ -182,6 +186,11 @@ struct BudgetSettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        .sheet(isPresented: $showingHelper) {
+            NavigationStack {
+                WeeklyNumberView { amount = SuggestedAmount.text($0) }
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {

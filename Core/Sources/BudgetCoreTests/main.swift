@@ -49,6 +49,16 @@ test("breakdownDropsNegativeBuckets", CategoryPaletteTests.test_breakdownDropsNe
 test("orphansJoinUncategorized", CategoryPaletteTests.test_orphansJoinUncategorized)
 test("breakdownIsSortedDescending", CategoryPaletteTests.test_breakdownIsSortedDescending)
 
+print("  weekly number")
+test("annualisesEachPeriod", WeeklyNumberTests.test_annualisesEachPeriod)
+test("treatsUnusableAmountsAsNothing", WeeklyNumberTests.test_treatsUnusableAmountsAsNothing)
+test("readsACommaDecimalSeparator", WeeklyNumberTests.test_readsACommaDecimalSeparator)
+test("dividesWhatIsLeftAcrossFiftyTwoWeeks", WeeklyNumberTests.test_dividesWhatIsLeftAcrossFiftyTwoWeeks)
+test("reportsAShortfallAsNegative", WeeklyNumberTests.test_reportsAShortfallAsNegative)
+test("totalsSplitIncomeFromOutgoing", WeeklyNumberTests.test_totalsSplitIncomeFromOutgoing)
+test("totalsHonourAChangedPeriod", WeeklyNumberTests.test_totalsHonourAChangedPeriod)
+test("asksSeventeenPromptsInThreeGroups", WeeklyNumberTests.test_asksSeventeenPromptsInThreeGroups)
+
 print("  invite links")
 test("readsTheToken", InviteLinkTests.test_readsTheToken)
 test("acceptsBase64urlAlphabet", InviteLinkTests.test_acceptsBase64urlAlphabet)
