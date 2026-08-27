@@ -382,6 +382,18 @@ final class InteractionTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Budget ID"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Share budget ID"].exists)
 
+        // Asserted before the sheet is scrolled, because inviting sits *above* the
+        // ID and a Form releases the rows it has scrolled past. On a tall screen
+        // one swipe travels enough of the sheet to take this row out of the tree,
+        // so checking it after the scroll below fails on iPad while passing on
+        // iPhone — a difference in the test, not in the app.
+        //
+        // Not tapped: creating an invitation is a real write against the real
+        // server, and a UI test should not be minting live invites on someone's
+        // budget.
+        XCTAssertTrue(app.buttons["Create an invitation"].exists,
+                      "inviting should be offered above the raw ID")
+
         // A Form builds its rows lazily, and this sheet is now long enough that the
         // lower ones are not realised until they are scrolled to.
         let howItWorks = app.buttons["How this works"]
@@ -395,12 +407,53 @@ final class InteractionTests: XCTestCase {
         // and a test that walks out of the app under test cannot assert much.
         XCTAssertTrue(app.buttons["Apps for other devices"].exists,
                       "the link to the other clients should be reachable")
+    }
 
-        // Also not tapped, for a different reason: creating an invitation is a
-        // real write against the real server, and a UI test should not be
-        // minting live invites on someone's budget.
-        XCTAssertTrue(app.buttons["Create an invitation"].exists,
-                      "inviting should be offered above the raw ID")
+    // MARK: About
+
+    func test_aboutNamesTheBuildAndOffersAWayToAsk() {
+        let app = launch()
+        XCTAssertTrue(app.buttons["budgetSettings"].waitForExistence(timeout: 10))
+        app.buttons["budgetSettings"].tap()
+
+        // The same lazy Form as above, and About is the last row of its section,
+        // so it takes more scrolling than anything else in the sheet.
+        let about = app.buttons["About"]
+        var attempts = 0
+        while !about.exists && attempts < 8 {
+            app.swipeUp()
+            attempts += 1
+        }
+        XCTAssertTrue(about.exists, "settings should offer About")
+        about.tap()
+        XCTAssertTrue(app.navigationBars["About"].waitForExistence(timeout: 5))
+
+        // The screen carries a version so that a bug report says which build it
+        // came from. The marketing version is not asserted literally — that
+        // would need editing on every bump, and the test would then be the thing
+        // most likely to be wrong. What is asserted is that the number came from
+        // somewhere: the em dash is the fallback for a missing Info.plist key,
+        // and it is the failure that makes the line useless while still looking
+        // like a version line.
+        let version = app.staticTexts
+            .matching(NSPredicate(format: "label BEGINSWITH 'Version '")).firstMatch
+        XCTAssertTrue(version.waitForExistence(timeout: 5), "About should carry the version")
+        XCTAssertFalse(version.label.contains("—"),
+                       "the version came back empty: \(version.label)")
+        XCTAssertNotNil(version.label.range(of: #"[0-9]+\.[0-9]+"#, options: .regularExpression),
+                        "the version should look like one: \(version.label)")
+
+        // None of the four are tapped, for the reason the store link above is
+        // not: mailto, the review sheet and the web page all leave the app, and
+        // a test that walks out of the app under test cannot assert much. That
+        // they are reachable is the contract — this is the only screen that
+        // answers "how do I ask somebody about this".
+        XCTAssertTrue(app.buttons["Need help? Email me"].exists,
+                      "there should be a way to reach the author")
+        XCTAssertTrue(app.buttons["Leave a review"].exists)
+        XCTAssertTrue(app.buttons["Learn more"].exists,
+                      "the web About page carries what this build does not say")
+        XCTAssertTrue(app.buttons["Privacy"].exists)
     }
 }
 

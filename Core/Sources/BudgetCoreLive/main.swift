@@ -169,6 +169,50 @@ let quiet = try await engine.sync(budgetId: budgetId)
 check("an idle sync pulls nothing", quiet.expensesPulled == 0 && quiet.categoriesPulled == 0,
       "\(quiet.expensesPulled) expenses, \(quiet.categoriesPulled) categories")
 
+// MARK: - Invites
+
+// The unit suite covers these against a fake, which cannot catch the thing most
+// likely to be wrong: the wire shape. `WireInvite` names six PascalCase keys and
+// the server mints the link, so a renamed field or a changed path is a decode
+// error at the one moment the app is asking someone to share their budget. The
+// UI test deliberately does not tap "Create an invitation" — it would mint live
+// invites on a real budget — which leaves this as the only place the round trip
+// is actually exercised. It runs on the throwaway budget, so it is free to.
+print("\n  invites")
+let invite = try await api.createInvite(budgetId: budgetId)
+check("invite created for this budget", invite.budgetId == budgetId, invite.budgetId)
+check("with a token", !invite.token.isEmpty)
+check("unused to begin with", invite.uses == 0 && invite.maxUses >= 1,
+      "uses=\(invite.uses) max=\(invite.maxUses)")
+
+// The cross-check worth having: the client's parser is deliberately narrow, and
+// the server writes the URL. If those two ever disagree the link opens the app
+// and then does nothing, which looks like the invitation being broken.
+check("the server's link parses back to the same token",
+      inviteToken(in: invite.url) == invite.token,
+      "\(invite.url.path) -> \(inviteToken(in: invite.url) ?? "nil")")
+
+let redeemed = try await api.redeemInvite(token: invite.token)
+check("redeeming hands back the budget", redeemed?.uniqueId == budgetId,
+      redeemed?.uniqueId ?? "nil")
+
+if invite.maxUses == 1 {
+    let second = try await api.redeemInvite(token: invite.token)
+    check("a single-use invite is spent afterwards", second == nil,
+          second == nil ? "" : "redeemed twice")
+}
+
+// Cancelling has to read as "no longer usable" rather than as an error, because
+// that is the branch the app shows an explanation for.
+let doomed = try await api.createInvite(budgetId: budgetId)
+try await api.revokeInvite(token: doomed.token)
+let afterRevoke = try await api.redeemInvite(token: doomed.token)
+check("a cancelled invite redeems to nil, not an error", afterRevoke == nil,
+      afterRevoke == nil ? "" : "still live")
+
+let nonsense = try await api.redeemInvite(token: "aaaaaaaaaaaaaaaaaaaaaa")
+check("an unknown token is nil too", nonsense == nil)
+
 // MARK: - Cleanup
 
 print("\n  cleanup")

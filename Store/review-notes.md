@@ -18,7 +18,7 @@ ask about do not exist here, so none are shown:
 2. TESTED ON
 
 iPhone 17 Pro simulator (iOS 26.5) and iPad Pro 13-inch M5 simulator (iPadOS
-26.5) — not on physical hardware. Every change also runs 20 UI tests across both
+26.5) — not on physical hardware. Every change also runs 21 UI tests across both
 device families and 100 unit assertions.
 
 3. WHAT IT DOES, AND WHO FOR
