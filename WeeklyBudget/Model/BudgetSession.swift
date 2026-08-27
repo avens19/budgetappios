@@ -100,7 +100,9 @@ final class BudgetSession {
 
     enum JoinError: LocalizedError {
         case notFound
-        var errorDescription: String? { "No budget with that ID. Check it and try again." }
+        var errorDescription: String? {
+            String(localized: "No budget with that ID. Check it and try again.")
+        }
     }
 
     // MARK: Invites
@@ -153,7 +155,7 @@ final class BudgetSession {
     enum InviteError: LocalizedError {
         case noLongerValid
         var errorDescription: String? {
-            "That invitation has already been used, or it has expired. Ask for a new one."
+            String(localized: "That invitation has already been used, or it has expired. Ask for a new one.")
         }
     }
 

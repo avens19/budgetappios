@@ -150,7 +150,7 @@ struct MonthView: View {
                 ProgressView(value: fraction)
                     .tint(isOver ? Color(.systemRed) : .accentColor)
                 Text(isOver
-                     ? "Over by \(Money.string(week.total - limit))"
+                     ? String(localized: "Over by \(Money.string(week.total - limit))")
                      : "\(Money.string(limit - week.total)) left")
                     .font(.caption)
                     .foregroundStyle(.secondary)

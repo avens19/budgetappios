@@ -8,7 +8,13 @@ struct CategoriesView: View {
 
     let budget: LocalBudget
 
-    enum Period: String, CaseIterable { case week = "Week", month = "Month" }
+    enum Period: String, CaseIterable {
+        case week = "Week", month = "Month"
+
+        /// The raw value is the segment's identity; this is what it says. A
+        /// picker built on rawValue shows English in every language.
+        var label: LocalizedStringKey { LocalizedStringKey(rawValue) }
+    }
 
     @State private var period: Period = .week
     @State private var anchor = BudgetCalendar.today()
@@ -88,7 +94,7 @@ struct CategoriesView: View {
         List {
             Section {
                 Picker("Period", selection: $period.animation(.snappy)) {
-                    ForEach(Period.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    ForEach(Period.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .listRowSeparator(.hidden)
@@ -223,7 +229,10 @@ struct CategoriesView: View {
                     .frame(width: 14, height: 14)
                 Text(slice.name).lineLimit(1)
                 Spacer(minLength: 8)
-                Text("\(Int((slice.amount / max(total, 0.01) * 100).rounded()))%")
+                // verbatim: a number and a percent sign, with no words in it.
+                // Left as a localizable literal it becomes a catalog key that
+                // twenty translators would be asked to leave alone.
+                Text(verbatim: "\(Int((slice.amount / max(total, 0.01) * 100).rounded()))%")
                     .font(.caption).foregroundStyle(.secondary).monospacedDigit()
                 Text(Money.string(slice.amount)).monospacedDigit()
             }

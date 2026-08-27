@@ -356,8 +356,10 @@ struct WeekTotalRow: View {
 
 struct EmptyState: View {
     let icon: String
-    let title: String
-    let message: String
+    // LocalizedStringKey, not String: every caller passes a literal, and
+    // Text(String) renders the string as-is without ever reaching the catalog.
+    let title: LocalizedStringKey
+    let message: LocalizedStringKey
 
     var body: some View {
         ContentUnavailableView {

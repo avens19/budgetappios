@@ -73,10 +73,12 @@ struct WeekView: View {
     private var subtitle: String? {
         guard isCurrentWeek else { return nil }
         let left = calendar.daysLeftInWeek(from: BudgetCalendar.today())
+        // String(localized:) rather than a bare literal: this is a String the
+        // view is handed, so nothing else would look it up.
         return switch left {
-        case 0: "This week · Last day"
-        case 1: "This week · 1 day left"
-        default: "This week · \(left) days left"
+        case 0: String(localized: "This week · Last day")
+        case 1: String(localized: "This week · 1 day left")
+        default: String(localized: "This week · \(left) days left")
         }
     }
 
@@ -240,7 +242,7 @@ struct WeekView: View {
 /// A date picker in a sheet, sized to its content.
 struct PeriodPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
-    let title: String
+    let title: LocalizedStringKey
     @Binding var selection: Date
 
     /// The picker works in the device's zone; budget dates are UTC days. These

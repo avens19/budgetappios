@@ -45,9 +45,9 @@ struct WeeklyNumberView: View {
                         row(for: line)
                     }
                 } header: {
-                    Text(group.title)
+                    Text(LocalizedStringKey(group.title))
                 } footer: {
-                    Text(group.help)
+                    Text(LocalizedStringKey(group.help))
                 }
             }
 
@@ -85,7 +85,7 @@ struct WeeklyNumberView: View {
     private func row(for line: WeeklyNumber.Line) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(line.label)
+                Text(LocalizedStringKey(line.label))
                 Spacer()
                 TextField("0.00", text: binding(for: line))
                     .keyboardType(.decimalPad)
@@ -98,14 +98,14 @@ struct WeeklyNumberView: View {
             // screen exists to avoid.
             Picker("How often", selection: periodBinding(for: line)) {
                 ForEach(WeeklyNumber.Period.allCases, id: \.self) { period in
-                    Text(period.label).tag(period)
+                    Text(LocalizedStringKey(period.label)).tag(period)
                 }
             }
             .pickerStyle(.menu)
             .labelsHidden()
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(line.label)
+        .accessibilityLabel(Text(LocalizedStringKey(line.label)))
     }
 
     private func binding(for line: WeeklyNumber.Line) -> Binding<String> {
@@ -120,11 +120,11 @@ struct WeeklyNumberView: View {
     /// and it is the one this screen exists to surface.
     private var note: String {
         if nothingEntered {
-            return "Fill in what you can. The number updates as you type."
+            return String(localized: "Fill in what you can. The number updates as you type.")
         }
         if weekly <= 0 {
-            return "That leaves nothing to spend each week. Check the figures — or leave the steady spending out and track it week to week instead."
+            return String(localized: "That leaves nothing to spend each week. Check the figures — or leave the steady spending out and track it here week to week instead.")
         }
-        return "\(Money.string(totals.income / WeeklyNumber.monthsPerYear)) a month in · \(Money.string(totals.outgoing / WeeklyNumber.monthsPerYear)) a month out"
+        return String(localized: "\(Money.string(totals.income / WeeklyNumber.monthsPerYear)) a month in · \(Money.string(totals.outgoing / WeeklyNumber.monthsPerYear)) a month out")
     }
 }

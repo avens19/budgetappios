@@ -19,8 +19,9 @@ struct OnboardingView: View {
     private struct Page: Identifiable {
         let id = UUID()
         let symbol: String
-        let title: String
-        let body: [String]
+        // Keys rather than strings, for the reason given on EmptyState.
+        let title: LocalizedStringKey
+        let body: [LocalizedStringKey]
     }
 
     private let pages: [Page] = [
@@ -59,7 +60,7 @@ struct OnboardingView: View {
                             .font(.title2.weight(.semibold))
                             .multilineTextAlignment(.center)
 
-                        ForEach(item.body, id: \.self) { paragraph in
+                        ForEach(Array(item.body.enumerated()), id: \.offset) { _, paragraph in
                             Text(paragraph)
                                 .multilineTextAlignment(.center)
                                 .foregroundStyle(.secondary)
@@ -123,7 +124,12 @@ struct FirstBudgetView: View {
     /// put it in. Consumed once, on appear, so it cannot overwrite typing.
     @AppStorage(SuggestedAmount.key) private var suggestedAmount = 0.0
 
-    enum Mode: String, CaseIterable { case create = "Create", join = "Join" }
+    enum Mode: String, CaseIterable {
+        case create = "Create", join = "Join"
+
+        /// The raw value identifies the mode; this is what the segment says.
+        var label: LocalizedStringKey { LocalizedStringKey(rawValue) }
+    }
 
     private var parsedAmount: Double? { Double(amount.replacingOccurrences(of: ",", with: ".")) }
 
@@ -131,7 +137,7 @@ struct FirstBudgetView: View {
         Form {
             Section {
                 Picker("", selection: $mode) {
-                    ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    ForEach(Mode.allCases, id: \.self) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .listRowBackground(Color.clear)
@@ -152,7 +158,7 @@ struct FirstBudgetView: View {
                     Picker("Week starts on", selection: $startDay) {
                         ForEach(0..<7, id: \.self) {
                             Text(["Sunday", "Monday", "Tuesday", "Wednesday",
-                                  "Thursday", "Friday", "Saturday"][$0]).tag($0)
+                                  "Thursday", "Friday", "Saturday"].map { LocalizedStringKey($0) }[$0]).tag($0)
                         }
                     }
                     Button("Not sure? Work it out") { showingHelper = true }
@@ -224,7 +230,7 @@ struct FirstBudgetView: View {
             } catch let joinError as BudgetSession.JoinError {
                 error = joinError.errorDescription
             } catch {
-                self.error = "Could not reach the server. Check your connection and try again."
+                self.error = String(localized: "Could not reach the server. Check your connection and try again.")
             }
             busy = false
         }
@@ -236,8 +242,8 @@ struct HowItWorksView: View {
     private struct Item: Identifiable {
         let id = UUID()
         let symbol: String
-        let title: String
-        let body: String
+        let title: LocalizedStringKey
+        let body: LocalizedStringKey
     }
 
     private let items: [Item] = [
