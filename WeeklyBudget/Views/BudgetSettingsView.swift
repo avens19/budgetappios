@@ -16,6 +16,7 @@ struct BudgetSettingsView: View {
     @State private var copied = false
     @State private var confirmingForget = false
     @AppStorage(Density.key) private var dense = false
+    @State private var showingHelper = false
     @State private var invite: WireInvite?
     @State private var invitingBusy = false
     @State private var inviteError: String?
@@ -23,8 +24,10 @@ struct BudgetSettingsView: View {
     @Query(sort: [SortDescriptor(\LocalBudget.lastOpened, order: .reverse)])
     private var budgets: [LocalBudget]
 
-    private static let weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday",
-                                   "Thursday", "Friday", "Saturday"]
+    /// Keys, looked up when the picker draws them. A [String] here is seven
+    /// English words no translation ever reaches.
+    private static let weekdays: [LocalizedStringKey] =
+        ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
     /// Built from the API host rather than written out again, so a move takes
     /// the link with it.
@@ -47,6 +50,9 @@ struct BudgetSettingsView: View {
                 Picker("Week starts on", selection: $startDay) {
                     ForEach(0..<7, id: \.self) { Text(Self.weekdays[$0]).tag($0) }
                 }
+                // Next to the field that asks the question people cannot
+                // answer, rather than buried with the other links below.
+                Button("Not sure? Work it out") { showingHelper = true }
             }
 
             // The way to hand this budget to someone. Above the raw id because it
@@ -83,8 +89,8 @@ struct BudgetSettingsView: View {
                 Text("Invite someone")
             } footer: {
                 Text(invite == nil
-                     ? "A link that works once and expires after seven days. Send it however you like; whoever opens it joins this budget."
-                     : "Good for one use, for the next seven days. Cancel it if you send it to the wrong person.")
+                     ? String(localized: "A link that works once and expires after seven days. Send it however you like; whoever opens it joins this budget.")
+                     : String(localized: "Good for one use, for the next seven days. Cancel it if you send it to the wrong person."))
             }
 
             Section {
@@ -131,9 +137,9 @@ struct BudgetSettingsView: View {
                         } label: {
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text(other.name.isEmpty ? "Untitled" : other.name)
+                                    Text(other.name.isEmpty ? String(localized: "Untitled") : other.name)
                                         .foregroundStyle(.primary)
-                                    Text(Money.string(other.amount) + " a week")
+                                    Text(String(localized: "\(Money.string(other.amount)) a week"))
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()
@@ -182,6 +188,11 @@ struct BudgetSettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        .sheet(isPresented: $showingHelper) {
+            NavigationStack {
+                WeeklyNumberView { amount = SuggestedAmount.text($0) }
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
@@ -211,7 +222,7 @@ struct BudgetSettingsView: View {
             do {
                 invite = try await session.createInvite(for: budget)
             } catch {
-                inviteError = "Could not create an invitation. Check your connection and try again."
+                inviteError = String(localized: "Could not create an invitation. Check your connection and try again.")
             }
         }
     }
@@ -225,7 +236,7 @@ struct BudgetSettingsView: View {
                 try await session.revokeInvite(token: existing.token)
                 invite = nil
             } catch {
-                inviteError = "Could not cancel that invitation."
+                inviteError = String(localized: "Could not cancel that invitation.")
             }
         }
     }
@@ -261,7 +272,7 @@ struct AddBudgetView: View {
                 Picker("Week starts on", selection: $startDay) {
                     ForEach(0..<7, id: \.self) {
                         Text(["Sunday", "Monday", "Tuesday", "Wednesday",
-                              "Thursday", "Friday", "Saturday"][$0]).tag($0)
+                              "Thursday", "Friday", "Saturday"].map { LocalizedStringKey($0) }[$0]).tag($0)
                     }
                 }
                 Button("Create") { create() }
@@ -293,7 +304,7 @@ struct AddBudgetView: View {
                                                amount: parsedAmount ?? 0, startDay: startDay)
                 dismiss()
             } catch {
-                self.error = "Could not create that budget. Check your connection and try again."
+                self.error = String(localized: "Could not create that budget. Check your connection and try again.")
             }
             busy = false
         }
@@ -308,7 +319,7 @@ struct AddBudgetView: View {
             } catch let joinError as BudgetSession.JoinError {
                 error = joinError.errorDescription
             } catch {
-                self.error = "Could not reach the server. Check your connection and try again."
+                self.error = String(localized: "Could not reach the server. Check your connection and try again.")
             }
             busy = false
         }

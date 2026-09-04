@@ -37,6 +37,33 @@ extra target.
 `BudgetCoreLive` creates a throwaway budget, exercises every endpoint, runs an
 offline-then-sync round trip, and deletes the budget again.
 
+## Languages
+
+English is the source language; twenty more ship in
+`WeeklyBudget/Localizable.xcstrings`, the same set as the Android app and the
+website: ar, de, es, es-419, fr, hi, id, it, ja, ko, nl, pl, pt-BR, pt-PT, ru,
+tr, uk, vi, zh-Hans, zh-Hant.
+
+Most of those translations came from the other two clients rather than being
+written again. The copy is deliberately word for word across the three, so a
+sentence already translated for Android or the web is the same sentence here.
+
+Two things to know before adding a string:
+
+**`Text(someString)` does not localise.** It renders the string. Only a literal,
+a `LocalizedStringKey`, or `String(localized:)` reaches the catalog — which is
+why `EmptyState`, `PeriodPickerSheet` and the tutorial's page models take
+`LocalizedStringKey`, and why the error messages are built with
+`String(localized:)`. The helper's prompts live in `Core` as plain `String`, so
+`WeeklyNumberView` wraps each one in `LocalizedStringKey`; `Core` stays free of
+SwiftUI, which is the point of it.
+
+**Check it without Xcode.** `python3 Tools/check_localizations.py` walks the
+source for every string the app asks for and reports anything the catalog is
+missing, any language missing from a key, and any translation whose format
+specifiers do not match. Xcode does the equivalent on a Mac with the project
+open; this runs anywhere, which is where the strings usually get added.
+
 ## The bits that are not obvious
 
 **Everything is UTC.** A budget date is a calendar day, not an instant. It is

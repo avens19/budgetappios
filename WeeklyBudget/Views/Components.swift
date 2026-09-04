@@ -63,6 +63,28 @@ enum Density {
     static let key = "layout.dense"
 }
 
+// MARK: - Suggested amount
+
+/// A weekly figure worked out in the helper before a budget existed.
+///
+/// The helper can be opened from the tutorial, which runs before there is
+/// anything to save it to, so the figure waits here for the form on the next
+/// screen. `@AppStorage` rather than passed down: the two screens are a sheet
+/// apart with the tutorial's pager in between, and threading a binding through
+/// that is more machinery than a number that lives for one screen deserves.
+///
+/// Zero means nothing is waiting, which is also what a helper answer can never
+/// be — the button that sets it is disabled at zero and below.
+enum SuggestedAmount {
+    static let key = "budget.suggestedWeeklyAmount"
+
+    /// Formatted the way the amount field wants it: plain digits with a dot,
+    /// which is what `Double(_:)` on the other side will accept back.
+    static func text(_ value: Double) -> String {
+        String(format: "%.2f", value)
+    }
+}
+
 /// Applies a list style by density.
 ///
 /// A modifier because `listStyle` takes different types: the ternary that would
@@ -109,14 +131,16 @@ struct HeroCard: View {
     private var compact: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
-                Text(isOver ? "\(Money.string(abs(remaining))) over" : "\(Money.string(abs(remaining))) left")
+                Text(isOver
+                     ? String(localized: "\(Money.string(abs(remaining))) over")
+                     : String(localized: "\(Money.string(abs(remaining))) left"))
                     .font(.title2.weight(.semibold).monospacedDigit())
                     .contentTransition(.numericText())
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .accessibilityLabel(isOver
-                        ? "Over budget by \(Money.string(abs(remaining)))"
-                        : "\(Money.string(abs(remaining))) left to spend")
+                        ? String(localized: "Over budget by \(Money.string(abs(remaining)))")
+                        : String(localized: "\(Money.string(abs(remaining))) left to spend"))
 
                 Spacer(minLength: 8)
 
@@ -149,7 +173,7 @@ struct HeroCard: View {
             // button into the same element, which both duplicated its
             // identifier and left VoiceOver users no way to reach it.
             VStack(alignment: .leading, spacing: 12) {
-                Text(isOver ? "Over budget" : "Left to spend")
+                Text(isOver ? String(localized: "Over budget") : String(localized: "Left to spend"))
                     .font(.subheadline.weight(.medium))
 
                 Text(Money.string(abs(remaining)))
@@ -166,8 +190,8 @@ struct HeroCard: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(isOver
-                ? "Over budget by \(Money.string(abs(remaining))), \(Money.string(spent)) of \(Money.string(limit))"
-                : "\(Money.string(abs(remaining))) left to spend, \(Money.string(spent)) of \(Money.string(limit))")
+                ? String(localized: "Over budget by \(Money.string(abs(remaining))), \(Money.string(spent)) of \(Money.string(limit))")
+                : String(localized: "\(Money.string(abs(remaining))) left to spend, \(Money.string(spent)) of \(Money.string(limit))"))
 
             if let onCarry {
                 HStack {
@@ -218,7 +242,7 @@ struct PeriodStepper: View {
                 }
             }
             .buttonStyle(.borderless)
-            .accessibilityHint("Jump to a date")
+            .accessibilityHint(String(localized: "Jump to a period"))
 
             Spacer()
 
@@ -334,8 +358,10 @@ struct WeekTotalRow: View {
 
 struct EmptyState: View {
     let icon: String
-    let title: String
-    let message: String
+    // LocalizedStringKey, not String: every caller passes a literal, and
+    // Text(String) renders the string as-is without ever reaching the catalog.
+    let title: LocalizedStringKey
+    let message: LocalizedStringKey
 
     var body: some View {
         ContentUnavailableView {

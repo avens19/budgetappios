@@ -103,7 +103,7 @@ struct ExpenseEditor: View {
                     }
                 }
             }
-            .navigationTitle(isEditing ? "Edit expense" : "Add expense")
+            .navigationTitle(isEditing ? String(localized: "Edit expense") : String(localized: "Add expense"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

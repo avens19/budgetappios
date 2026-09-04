@@ -150,17 +150,17 @@ struct RootView: View {
             defer { redeeming = false }
             do {
                 let budget = try await session.acceptInvite(token: token)
+                let shared = budget.name.isEmpty ? String(localized: "this budget") : budget.name
                 inviteOutcome = InviteOutcome(
-                    title: "Budget joined",
-                    message: "You are now sharing \(budget.name.isEmpty ? "this budget" : budget.name). "
-                           + "It will fill in as it syncs.")
+                    title: String(localized: "Budget joined"),
+                    message: String(localized: "You are now sharing \(shared). It will fill in as it syncs."))
             } catch let error as BudgetSession.InviteError {
-                inviteOutcome = InviteOutcome(title: "Invitation not valid",
+                inviteOutcome = InviteOutcome(title: String(localized: "Invitation not valid"),
                                               message: error.errorDescription ?? "")
             } catch {
                 inviteOutcome = InviteOutcome(
-                    title: "Could not join",
-                    message: "Check your connection and open the link again.")
+                    title: String(localized: "Could not join"),
+                    message: String(localized: "Check your connection and open the link again."))
             }
         }
     }
