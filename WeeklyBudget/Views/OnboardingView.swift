@@ -85,7 +85,7 @@ struct OnboardingView: View {
                 Button("Skip") { showingSetup = true }
                     .opacity(page == pages.count - 1 ? 0 : 1)
                 Spacer()
-                Button(page == pages.count - 1 ? "Get started" : "Next") {
+                Button(page == pages.count - 1 ? String(localized: "Get started") : String(localized: "Next")) {
                     withAnimation {
                         if page == pages.count - 1 { showingSetup = true } else { page += 1 }
                     }
@@ -182,12 +182,12 @@ struct FirstBudgetView: View {
             }
 
             Section {
-                Button(mode == .create ? "Create budget" : "Join budget") { submit() }
+                Button(mode == .create ? String(localized: "Create budget") : String(localized: "Join budget")) { submit() }
                     .frame(maxWidth: .infinity)
                     .disabled(busy || !canSubmit)
             }
         }
-        .navigationTitle(mode == .create ? "New budget" : "Join a budget")
+        .navigationTitle(mode == .create ? String(localized: "New budget") : String(localized: "Join a budget"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if amount.isEmpty, suggestedAmount > 0 {

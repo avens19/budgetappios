@@ -89,8 +89,8 @@ struct BudgetSettingsView: View {
                 Text("Invite someone")
             } footer: {
                 Text(invite == nil
-                     ? "A link that works once and expires after seven days. Send it however you like; whoever opens it joins this budget."
-                     : "Good for one use, for the next seven days. Cancel it if you send it to the wrong person.")
+                     ? String(localized: "A link that works once and expires after seven days. Send it however you like; whoever opens it joins this budget.")
+                     : String(localized: "Good for one use, for the next seven days. Cancel it if you send it to the wrong person."))
             }
 
             Section {
@@ -137,9 +137,9 @@ struct BudgetSettingsView: View {
                         } label: {
                             HStack {
                                 VStack(alignment: .leading) {
-                                    Text(other.name.isEmpty ? "Untitled" : other.name)
+                                    Text(other.name.isEmpty ? String(localized: "Untitled") : other.name)
                                         .foregroundStyle(.primary)
-                                    Text(Money.string(other.amount) + " a week")
+                                    Text(String(localized: "\(Money.string(other.amount)) a week"))
                                         .font(.caption).foregroundStyle(.secondary)
                                 }
                                 Spacer()

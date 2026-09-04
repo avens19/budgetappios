@@ -151,7 +151,7 @@ struct MonthView: View {
                     .tint(isOver ? Color(.systemRed) : .accentColor)
                 Text(isOver
                      ? String(localized: "Over by \(Money.string(week.total - limit))")
-                     : "\(Money.string(limit - week.total)) left")
+                     : String(localized: "\(Money.string(limit - week.total)) left"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

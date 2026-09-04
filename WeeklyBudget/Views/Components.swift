@@ -131,14 +131,16 @@ struct HeroCard: View {
     private var compact: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
-                Text(isOver ? "\(Money.string(abs(remaining))) over" : "\(Money.string(abs(remaining))) left")
+                Text(isOver
+                     ? String(localized: "\(Money.string(abs(remaining))) over")
+                     : String(localized: "\(Money.string(abs(remaining))) left"))
                     .font(.title2.weight(.semibold).monospacedDigit())
                     .contentTransition(.numericText())
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .accessibilityLabel(isOver
-                        ? "Over budget by \(Money.string(abs(remaining)))"
-                        : "\(Money.string(abs(remaining))) left to spend")
+                        ? String(localized: "Over budget by \(Money.string(abs(remaining)))")
+                        : String(localized: "\(Money.string(abs(remaining))) left to spend"))
 
                 Spacer(minLength: 8)
 
@@ -171,7 +173,7 @@ struct HeroCard: View {
             // button into the same element, which both duplicated its
             // identifier and left VoiceOver users no way to reach it.
             VStack(alignment: .leading, spacing: 12) {
-                Text(isOver ? "Over budget" : "Left to spend")
+                Text(isOver ? String(localized: "Over budget") : String(localized: "Left to spend"))
                     .font(.subheadline.weight(.medium))
 
                 Text(Money.string(abs(remaining)))
@@ -188,8 +190,8 @@ struct HeroCard: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(isOver
-                ? "Over budget by \(Money.string(abs(remaining))), \(Money.string(spent)) of \(Money.string(limit))"
-                : "\(Money.string(abs(remaining))) left to spend, \(Money.string(spent)) of \(Money.string(limit))")
+                ? String(localized: "Over budget by \(Money.string(abs(remaining))), \(Money.string(spent)) of \(Money.string(limit))")
+                : String(localized: "\(Money.string(abs(remaining))) left to spend, \(Money.string(spent)) of \(Money.string(limit))"))
 
             if let onCarry {
                 HStack {
@@ -240,7 +242,7 @@ struct PeriodStepper: View {
                 }
             }
             .buttonStyle(.borderless)
-            .accessibilityHint("Jump to a date")
+            .accessibilityHint(String(localized: "Jump to a period"))
 
             Spacer()
 

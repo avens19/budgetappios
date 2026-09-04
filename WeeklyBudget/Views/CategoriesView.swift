@@ -197,7 +197,7 @@ struct CategoriesView: View {
                     .font(.title2.weight(.semibold))
                     .minimumScaleFactor(0.5)
                     .lineLimit(1)
-                Text(period == .week ? "this week" : "this month")
+                Text(period == .week ? String(localized: "This week") : String(localized: "This month"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
