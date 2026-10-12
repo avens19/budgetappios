@@ -25,11 +25,13 @@ actor SwiftDataStore: LocalStore {
 
     func updateBudgetDetails(_ wire: WireBudget) throws {
         guard let budget = try budget(wire.uniqueId) else { return }
-        // Name, amount and start day are the server's to own — another device
-        // may have changed them. The watermark is ours and is left alone.
+        // Name, amount, start day and the carry setting are the server's to own
+        // — another device may have changed them. The watermark is ours and is
+        // left alone.
         budget.name = wire.name
         budget.amount = wire.amount
         budget.startDay = wire.startDay
+        budget.carryBalance = wire.carryBalance
         try modelContext.save()
     }
 

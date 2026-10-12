@@ -13,6 +13,7 @@ struct BudgetSettingsView: View {
     @State private var name = ""
     @State private var amount = ""
     @State private var startDay = 0
+    @State private var carryBalance = false
     @State private var copied = false
     @State private var confirmingForget = false
     @AppStorage(Density.key) private var dense = false
@@ -53,6 +54,13 @@ struct BudgetSettingsView: View {
                 // Next to the field that asks the question people cannot
                 // answer, rather than buried with the other links below.
                 Button("Not sure? Work it out") { showingHelper = true }
+            }
+
+            Section {
+                Toggle("Carry balance forward automatically", isOn: $carryBalance)
+                    .accessibilityIdentifier("carryBalance")
+            } footer: {
+                Text("Each new week starts with what was left over, or overspent, the week before.")
             }
 
             // The way to hand this budget to someone. Above the raw id because it
@@ -211,6 +219,7 @@ struct BudgetSettingsView: View {
             name = budget.name
             amount = String(format: "%g", budget.amount)
             startDay = budget.startDay
+            carryBalance = budget.carryBalance
         }
     }
 
@@ -245,8 +254,10 @@ struct BudgetSettingsView: View {
         let trimmed = name.trimmingCharacters(in: .whitespaces)
         guard let value = parsedAmount else { return }
         guard trimmed != budget.name || value != budget.amount || startDay != budget.startDay
+                || carryBalance != budget.carryBalance
         else { return }
-        session.updateBudget(budget, name: trimmed, amount: value, startDay: startDay)
+        session.updateBudget(budget, name: trimmed, amount: value, startDay: startDay,
+                             carryBalance: carryBalance)
     }
 }
 

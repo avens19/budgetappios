@@ -68,7 +68,8 @@ final class BudgetSession {
         _ = try await api.createBudget(wire)
 
         let local = LocalBudget(uniqueId: wire.uniqueId, name: wire.name,
-                                startDay: wire.startDay, amount: wire.amount)
+                                startDay: wire.startDay, amount: wire.amount,
+                                carryBalance: wire.carryBalance)
         context.insert(local)
         try context.save()
         select(local)
@@ -91,7 +92,8 @@ final class BudgetSession {
         }
 
         let local = LocalBudget(uniqueId: wire.uniqueId, name: wire.name,
-                                startDay: wire.startDay, amount: wire.amount)
+                                startDay: wire.startDay, amount: wire.amount,
+                                carryBalance: wire.carryBalance)
         context.insert(local)
         try context.save()
         select(local)
@@ -139,13 +141,15 @@ final class BudgetSession {
             existing.name = wire.name
             existing.amount = wire.amount
             existing.startDay = wire.startDay
+            existing.carryBalance = wire.carryBalance
             try? context.save()
             select(existing)
             return existing
         }
 
         let local = LocalBudget(uniqueId: wire.uniqueId, name: wire.name,
-                                startDay: wire.startDay, amount: wire.amount)
+                                startDay: wire.startDay, amount: wire.amount,
+                                carryBalance: wire.carryBalance)
         context.insert(local)
         try context.save()
         select(local)
@@ -159,10 +163,12 @@ final class BudgetSession {
         }
     }
 
-    func updateBudget(_ budget: LocalBudget, name: String, amount: Double, startDay: Int) {
+    func updateBudget(_ budget: LocalBudget, name: String, amount: Double, startDay: Int,
+                      carryBalance: Bool) {
         budget.name = name
         budget.amount = amount
         budget.startDay = startDay
+        budget.carryBalance = carryBalance
         try? context.save()
 
         Task {
@@ -241,8 +247,72 @@ final class BudgetSession {
         guard rounded >= 0.01 else { return }
         addExpense(to: budget,
                    date: budget.calendar.addingWeeks(1, to: weekStart),
-                   detail: "Carried Balance", amount: -rounded,
+                   detail: String(localized: "Carried Balance"), amount: -rounded,
                    categoryId: nil, isSystem: true)
+    }
+
+    private static func carriedWeekKey(_ budgetId: String) -> String { "budget.carriedWeek.\(budgetId)" }
+
+    /// Carries last week's balance into the current week, for a budget that has
+    /// turned that on and if it has not been done yet — a surplus or a deficit —
+    /// so nobody has to remember to tap Carry.
+    ///
+    /// Run when a sync finishes, so a carry another device already made has
+    /// arrived and is seen rather than made twice. A sync that failed still
+    /// counts: offline is the normal case, and the row is written locally and
+    /// pushed with everything else.
+    ///
+    /// Once per budget per week, remembered on the device, so a carry the user
+    /// deleted stays deleted: from the expenses alone it is indistinguishable
+    /// from one that was never made.
+    @discardableResult
+    func carryIfDue(budgetId: String) -> Bool {
+        #if DEBUG
+        // The demo budget has history and the UI tests assert on its exact
+        // totals; a carry appearing in the middle of them would break each one.
+        if DemoData.isRequested { return false }
+        #endif
+
+        guard let budget = try? context.fetch(FetchDescriptor<LocalBudget>(
+            predicate: #Predicate { $0.uniqueId == budgetId })).first else { return false }
+
+        // Off unless the budget's settings turn it on.
+        guard budget.carryBalance else { return false }
+
+        let calendar = budget.calendar
+        let thisWeek = calendar.weekStart(containing: BudgetCalendar.today())
+        let nextWeek = calendar.addingWeeks(1, to: thisWeek)
+        let lastWeek = calendar.addingWeeks(-1, to: thisWeek)
+
+        let key = Self.carriedWeekKey(budgetId)
+        let defaults = UserDefaults.standard
+        if defaults.double(forKey: key) == thisWeek.timeIntervalSince1970 { return false }
+
+        let all = (try? context.fetch(FetchDescriptor<LocalExpense>(
+            predicate: #Predicate { $0.budgetId == budgetId }))) ?? []
+        let live = all.filter { $0.state != .deleted }
+
+        // The Carry button, or another device, got there first.
+        if live.contains(where: { $0.isSystem && $0.date >= thisWeek && $0.date < nextWeek }) {
+            defaults.set(thisWeek.timeIntervalSince1970, forKey: key)
+            return false
+        }
+
+        // A budget with nothing before this week has nothing to carry from.
+        // Without this a budget created today would open next week with a whole
+        // extra allowance, because an empty week looks like an unspent one. Not
+        // remembered: on a new device this is also what an unfinished first
+        // sync looks like, and the answer changes once it is done.
+        guard live.contains(where: { $0.date < thisWeek }) else { return false }
+
+        let spent = live.filter { $0.date >= lastWeek && $0.date < thisWeek }
+            .reduce(0) { $0 + $1.amount }
+        defaults.set(thisWeek.timeIntervalSince1970, forKey: key)
+        guard let amount = CarryOver.amount(limit: budget.amount, spent: spent) else { return false }
+
+        addExpense(to: budget, date: thisWeek, detail: String(localized: "Carried Balance"),
+                   amount: amount, categoryId: nil, isSystem: true)
+        return true
     }
 
     // MARK: Categories
@@ -295,6 +365,7 @@ final class BudgetSession {
                 lastSyncFailed = true
             }
             isSyncing = false
+            carryIfDue(budgetId: budgetId)
         }
     }
 
@@ -310,5 +381,6 @@ final class BudgetSession {
             lastSyncFailed = true
         }
         isSyncing = false
+        carryIfDue(budgetId: budgetId)
     }
 }

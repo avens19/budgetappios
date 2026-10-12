@@ -24,6 +24,11 @@ final class LocalBudget {
     var startDay: Int
     var amount: Double
 
+    /// Whether this budget carries each week's balance forward by itself. The
+    /// default is what lets a store from before the setting open without a
+    /// migration step.
+    var carryBalance: Bool = false
+
     /// How far the change feeds have been consumed. Always the server's own
     /// answer, never this device's clock — see `SyncEngine.nextWatermark`.
     var watermark: String?
@@ -33,11 +38,13 @@ final class LocalBudget {
     var lastOpened: Date
 
     init(uniqueId: String, name: String, startDay: Int, amount: Double,
+         carryBalance: Bool = false,
          watermark: String? = nil, lastOpened: Date = .now) {
         self.uniqueId = uniqueId
         self.name = name
         self.startDay = startDay
         self.amount = amount
+        self.carryBalance = carryBalance
         self.watermark = watermark
         self.lastOpened = lastOpened
     }
@@ -45,7 +52,8 @@ final class LocalBudget {
     var calendar: BudgetCalendar { BudgetCalendar(startDay: startDay) }
 
     var wire: WireBudget {
-        WireBudget(uniqueId: uniqueId, name: name, startDay: startDay, amount: amount)
+        WireBudget(uniqueId: uniqueId, name: name, startDay: startDay, amount: amount,
+                   carryBalance: carryBalance)
     }
 }
 

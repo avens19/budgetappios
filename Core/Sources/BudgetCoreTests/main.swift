@@ -21,6 +21,7 @@ test("lenientParsing", WireDateTests.test_lenientParsing)
 test("rejectsGarbage", WireDateTests.test_rejectsGarbage)
 test("decodesServerPayload", WireDateTests.test_decodesServerPayload)
 test("nullFlagsDefaultToFalse", WireDateTests.test_nullFlagsDefaultToFalse)
+test("budgetWithoutCarryBalanceIsOff", WireDateTests.test_budgetWithoutCarryBalanceIsOff)
 test("encodesBareDay", WireDateTests.test_encodesBareDay)
 
 print("  watermarks")
@@ -58,6 +59,14 @@ test("reportsAShortfallAsNegative", WeeklyNumberTests.test_reportsAShortfallAsNe
 test("totalsSplitIncomeFromOutgoing", WeeklyNumberTests.test_totalsSplitIncomeFromOutgoing)
 test("totalsHonourAChangedPeriod", WeeklyNumberTests.test_totalsHonourAChangedPeriod)
 test("asksSeventeenPromptsInThreeGroups", WeeklyNumberTests.test_asksSeventeenPromptsInThreeGroups)
+
+print("  carry over")
+test("aSurplusCarriesAsANegativeExpense", CarryOverTests.test_aSurplusCarriesAsANegativeExpense)
+test("aDeficitCarriesAsAPositiveExpense", CarryOverTests.test_aDeficitCarriesAsAPositiveExpense)
+test("anEvenWeekCarriesNothing", CarryOverTests.test_anEvenWeekCarriesNothing)
+test("ignoresRoundingNoise", CarryOverTests.test_ignoresRoundingNoise)
+test("roundsToTheCent", CarryOverTests.test_roundsToTheCent)
+test("anEmptyWeekCarriesTheWholeAllowance", CarryOverTests.test_anEmptyWeekCarriesTheWholeAllowance)
 
 print("  invite links")
 test("readsTheToken", InviteLinkTests.test_readsTheToken)

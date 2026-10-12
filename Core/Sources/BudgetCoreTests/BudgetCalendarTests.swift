@@ -123,6 +123,20 @@ enum WireDateTests {
         XCTAssertTrue(expense.isDeleted == false)
     }
 
+    /// A server that has not heard of the setting sends no such key, and a
+    /// budget must not fail to load over it
+    static func test_budgetWithoutCarryBalanceIsOff() throws {
+        let old = """
+        {"UniqueId":"b","Name":"Home","StartDay":1,"Amount":250}
+        """
+        XCTAssertTrue(try JSONDecoder().decode(WireBudget.self, from: Data(old.utf8)).carryBalance == false)
+
+        let new = """
+        {"UniqueId":"b","Name":"Home","StartDay":1,"Amount":250,"CarryBalance":true}
+        """
+        XCTAssertTrue(try JSONDecoder().decode(WireBudget.self, from: Data(new.utf8)).carryBalance)
+    }
+
     /// Encoding sends a bare day, which no timezone can shift
     static func test_encodesBareDay() throws {
         let expense = WireExpense(id: 0, date: try WireDate.day(from: "2026-08-14"),
