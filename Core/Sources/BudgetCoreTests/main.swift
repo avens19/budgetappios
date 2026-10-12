@@ -59,6 +59,14 @@ test("totalsSplitIncomeFromOutgoing", WeeklyNumberTests.test_totalsSplitIncomeFr
 test("totalsHonourAChangedPeriod", WeeklyNumberTests.test_totalsHonourAChangedPeriod)
 test("asksSeventeenPromptsInThreeGroups", WeeklyNumberTests.test_asksSeventeenPromptsInThreeGroups)
 
+print("  carry over")
+test("aSurplusCarriesAsANegativeExpense", CarryOverTests.test_aSurplusCarriesAsANegativeExpense)
+test("aDeficitCarriesAsAPositiveExpense", CarryOverTests.test_aDeficitCarriesAsAPositiveExpense)
+test("anEvenWeekCarriesNothing", CarryOverTests.test_anEvenWeekCarriesNothing)
+test("ignoresRoundingNoise", CarryOverTests.test_ignoresRoundingNoise)
+test("roundsToTheCent", CarryOverTests.test_roundsToTheCent)
+test("anEmptyWeekCarriesTheWholeAllowance", CarryOverTests.test_anEmptyWeekCarriesTheWholeAllowance)
+
 print("  invite links")
 test("readsTheToken", InviteLinkTests.test_readsTheToken)
 test("acceptsBase64urlAlphabet", InviteLinkTests.test_acceptsBase64urlAlphabet)

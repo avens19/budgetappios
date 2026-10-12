@@ -91,10 +91,18 @@ in `CategoryIndex` on Android and `categoryIndex()` on the web, so a category is
 the same colour everywhere. Hashing collides too often at ten colours to be
 worth it.
 
-**Carried balance is a negative system expense** dated to the next week's first
-day. It is excluded from the category chart, along with every other `IsSystem`
-row and every category whose total is not positive — which is exactly what the
-Android query does.
+**Carried balance is a system expense** dated to the next week's first day, with
+the negative of what was left as its amount: a surplus is negative, a deficit
+positive. It is excluded from the category chart, along with every other
+`IsSystem` row and every category whose total is not positive — which is exactly
+what the Android query does.
+
+**The carry happens by itself.** `BudgetSession.carryIfDue` runs when a sync
+finishes, so a carry another device made has already arrived. Once per budget
+per week, remembered in `UserDefaults`, so a carry the user deletes stays
+deleted. Skipped for a budget with nothing dated before the current week,
+otherwise a brand-new budget would open with a free extra allowance. It is
+switched off in `-demo`, whose totals the UI tests assert on.
 
 ## Protocol
 

@@ -65,6 +65,16 @@ struct WeekView: View {
     private var spent: Double { expenses.reduce(0) { $0 + $1.amount } }
     private var remaining: Double { budget.amount - spent }
 
+    /// Whether this week's balance has already been moved, by the Carry button
+    /// or by the app on its own, so it is not offered a second time.
+    private var nextWeekHasCarry: Bool {
+        let next = calendar.addingWeeks(1, to: weekStart)
+        let after = calendar.addingWeeks(1, to: next)
+        return allExpenses.contains {
+            $0.isSystem && $0.state != .deleted && $0.date >= next && $0.date < after
+        }
+    }
+
     private var isCurrentWeek: Bool {
         let today = BudgetCalendar.today()
         return today >= weekStart && today < weekEnd
@@ -102,7 +112,7 @@ struct WeekView: View {
                 .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
 
                 HeroCard(remaining: remaining, spent: spent, limit: budget.amount,
-                         onCarry: remaining >= 0.01 ? { confirmingCarry = true } : nil,
+                         onCarry: remaining >= 0.01 && !nextWeekHasCarry ? { confirmingCarry = true } : nil,
                          dense: dense)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 4, leading: dense ? 8 : 16,
