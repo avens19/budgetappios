@@ -21,6 +21,7 @@ test("lenientParsing", WireDateTests.test_lenientParsing)
 test("rejectsGarbage", WireDateTests.test_rejectsGarbage)
 test("decodesServerPayload", WireDateTests.test_decodesServerPayload)
 test("nullFlagsDefaultToFalse", WireDateTests.test_nullFlagsDefaultToFalse)
+test("budgetWithoutCarryBalanceIsOff", WireDateTests.test_budgetWithoutCarryBalanceIsOff)
 test("encodesBareDay", WireDateTests.test_encodesBareDay)
 
 print("  watermarks")

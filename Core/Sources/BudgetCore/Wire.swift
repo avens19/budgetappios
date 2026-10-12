@@ -16,19 +16,34 @@ public struct WireBudget: Codable, Sendable, Equatable {
     public var name: String
     public var startDay: Int
     public var amount: Double
+    /// Whether the budget carries each week's balance into the next by itself.
+    public var carryBalance: Bool
 
     enum CodingKeys: String, CodingKey {
         case uniqueId = "UniqueId"
         case name = "Name"
         case startDay = "StartDay"
         case amount = "Amount"
+        case carryBalance = "CarryBalance"
     }
 
-    public init(uniqueId: String, name: String, startDay: Int, amount: Double) {
+    public init(uniqueId: String, name: String, startDay: Int, amount: Double,
+                carryBalance: Bool = false) {
         self.uniqueId = uniqueId
         self.name = name
         self.startDay = startDay
         self.amount = amount
+        self.carryBalance = carryBalance
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        uniqueId = try c.decode(String.self, forKey: .uniqueId)
+        name = try c.decode(String.self, forKey: .name)
+        startDay = try c.decode(Int.self, forKey: .startDay)
+        amount = try c.decode(Double.self, forKey: .amount)
+        // Absent from a server that predates the setting. Off.
+        carryBalance = try c.decodeIfPresent(Bool.self, forKey: .carryBalance) ?? false
     }
 }
 

@@ -97,7 +97,9 @@ positive. It is excluded from the category chart, along with every other
 `IsSystem` row and every category whose total is not positive — which is exactly
 what the Android query does.
 
-**The carry happens by itself.** `BudgetSession.carryIfDue` runs when a sync
+**The carry can happen by itself,** for a budget that turns on "Carry balance
+forward automatically" (the `CarryBalance` flag on the budget, off by default and
+shared through the server). `BudgetSession.carryIfDue` runs when a sync
 finishes, so a carry another device made has already arrived. Once per budget
 per week, remembered in `UserDefaults`, so a carry the user deletes stays
 deleted. Skipped for a budget with nothing dated before the current week,

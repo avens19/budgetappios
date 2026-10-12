@@ -68,7 +68,8 @@ final class BudgetSession {
         _ = try await api.createBudget(wire)
 
         let local = LocalBudget(uniqueId: wire.uniqueId, name: wire.name,
-                                startDay: wire.startDay, amount: wire.amount)
+                                startDay: wire.startDay, amount: wire.amount,
+                                carryBalance: wire.carryBalance)
         context.insert(local)
         try context.save()
         select(local)
@@ -91,7 +92,8 @@ final class BudgetSession {
         }
 
         let local = LocalBudget(uniqueId: wire.uniqueId, name: wire.name,
-                                startDay: wire.startDay, amount: wire.amount)
+                                startDay: wire.startDay, amount: wire.amount,
+                                carryBalance: wire.carryBalance)
         context.insert(local)
         try context.save()
         select(local)
@@ -139,13 +141,15 @@ final class BudgetSession {
             existing.name = wire.name
             existing.amount = wire.amount
             existing.startDay = wire.startDay
+            existing.carryBalance = wire.carryBalance
             try? context.save()
             select(existing)
             return existing
         }
 
         let local = LocalBudget(uniqueId: wire.uniqueId, name: wire.name,
-                                startDay: wire.startDay, amount: wire.amount)
+                                startDay: wire.startDay, amount: wire.amount,
+                                carryBalance: wire.carryBalance)
         context.insert(local)
         try context.save()
         select(local)
@@ -159,10 +163,12 @@ final class BudgetSession {
         }
     }
 
-    func updateBudget(_ budget: LocalBudget, name: String, amount: Double, startDay: Int) {
+    func updateBudget(_ budget: LocalBudget, name: String, amount: Double, startDay: Int,
+                      carryBalance: Bool) {
         budget.name = name
         budget.amount = amount
         budget.startDay = startDay
+        budget.carryBalance = carryBalance
         try? context.save()
 
         Task {
@@ -247,9 +253,9 @@ final class BudgetSession {
 
     private static func carriedWeekKey(_ budgetId: String) -> String { "budget.carriedWeek.\(budgetId)" }
 
-    /// Carries last week's balance into the current week if that has not been
-    /// done yet — a surplus or a deficit — so nobody has to remember to tap
-    /// Carry.
+    /// Carries last week's balance into the current week, for a budget that has
+    /// turned that on and if it has not been done yet — a surplus or a deficit —
+    /// so nobody has to remember to tap Carry.
     ///
     /// Run when a sync finishes, so a carry another device already made has
     /// arrived and is seen rather than made twice. A sync that failed still
@@ -269,6 +275,9 @@ final class BudgetSession {
 
         guard let budget = try? context.fetch(FetchDescriptor<LocalBudget>(
             predicate: #Predicate { $0.uniqueId == budgetId })).first else { return false }
+
+        // Off unless the budget's settings turn it on.
+        guard budget.carryBalance else { return false }
 
         let calendar = budget.calendar
         let thisWeek = calendar.weekStart(containing: BudgetCalendar.today())
