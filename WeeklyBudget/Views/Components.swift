@@ -63,6 +63,13 @@ enum Density {
     static let key = "layout.dense"
 }
 
+/// Whether the week lists its most recent expenses first. Off by default, which
+/// keeps the long-standing oldest-first order. A device preference, like
+/// `Density`, so it does not sync.
+enum WeekOrder {
+    static let newestFirstKey = "layout.newestFirst"
+}
+
 // MARK: - Suggested amount
 
 /// A weekly figure worked out in the helper before a budget existed.

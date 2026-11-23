@@ -17,6 +17,7 @@ struct BudgetSettingsView: View {
     @State private var copied = false
     @State private var confirmingForget = false
     @AppStorage(Density.key) private var dense = false
+    @AppStorage(WeekOrder.newestFirstKey) private var newestFirst = false
     @State private var showingHelper = false
     @State private var invite: WireInvite?
     @State private var invitingBusy = false
@@ -165,6 +166,13 @@ struct BudgetSettingsView: View {
                 .accessibilityIdentifier("compactLayout")
             } footer: {
                 Text("Fits more on screen: one running list for the week instead of a heading per day, and a smaller balance strip.")
+            }
+
+            Section {
+                Toggle(isOn: $newestFirst) {
+                    Label("Newest first", systemImage: "arrow.up")
+                }
+                .accessibilityIdentifier("newestFirst")
             }
 
             Section {

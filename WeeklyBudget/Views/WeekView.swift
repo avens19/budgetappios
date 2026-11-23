@@ -12,6 +12,7 @@ struct WeekView: View {
     @State private var confirmingCarry = false
 
     @AppStorage(Density.key) private var dense = false
+    @AppStorage(WeekOrder.newestFirstKey) private var newestFirst = false
 
     /// One sheet, not four.
     ///
@@ -94,9 +95,16 @@ struct WeekView: View {
 
     /// Expenses grouped under a heading per day, as on the other clients.
     private var days: [(date: Date, total: Double, rows: [LocalExpense])] {
-        Dictionary(grouping: expenses, by: \.date)
+        Dictionary(grouping: ordered, by: \.date)
             .map { (date: $0.key, total: $0.value.reduce(0) { $0 + $1.amount }, rows: $0.value) }
-            .sorted { $0.date < $1.date }
+            .sorted { newestFirst ? $0.date > $1.date : $0.date < $1.date }
+    }
+
+    /// The week's expenses in the order they are listed: the query already sorts
+    /// oldest first, so most-recent-first is the same list reversed — within a
+    /// day as well as across days.
+    private var ordered: [LocalExpense] {
+        newestFirst ? expenses.reversed() : expenses
     }
 
     var body: some View {
@@ -135,7 +143,7 @@ struct WeekView: View {
                 // users treat the week that way and do not always file an expense
                 // under the right day.
                 Section {
-                    ForEach(expenses) { expense in
+                    ForEach(ordered) { expense in
                         row(for: expense)
                     }
                     if !expenses.isEmpty {
