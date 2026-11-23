@@ -129,12 +129,14 @@ enum WireDateTests {
         let old = """
         {"UniqueId":"b","Name":"Home","StartDay":1,"Amount":250}
         """
-        XCTAssertTrue(try JSONDecoder().decode(WireBudget.self, from: Data(old.utf8)).carryBalance == false)
+        let oldBudget = try JSONDecoder().decode(WireBudget.self, from: Data(old.utf8))
+        XCTAssertTrue(oldBudget.carryBalance == false)
 
         let new = """
         {"UniqueId":"b","Name":"Home","StartDay":1,"Amount":250,"CarryBalance":true}
         """
-        XCTAssertTrue(try JSONDecoder().decode(WireBudget.self, from: Data(new.utf8)).carryBalance)
+        let newBudget = try JSONDecoder().decode(WireBudget.self, from: Data(new.utf8))
+        XCTAssertTrue(newBudget.carryBalance)
     }
 
     /// Encoding sends a bare day, which no timezone can shift
